@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'api_keys_page.dart';
+import 'about_page.dart';
 import '../../collect/pages/collect_backup_page.dart';
 
 
@@ -58,6 +59,19 @@ class SettingsPage extends StatelessWidget {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const CollectBackupPage(),
+                  ),
+                );
+              },
+            ),
+            _buildSettingItem(
+              context,
+              icon: Icons.info_outline,
+              title: '关于',
+              subtitle: '应用信息和作者',
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const AboutPage(),
                   ),
                 );
               },
