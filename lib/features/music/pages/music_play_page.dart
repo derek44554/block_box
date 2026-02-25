@@ -421,22 +421,13 @@ class _MusicPlayPageState extends State<MusicPlayPage> {
       final selectedCollectionBid = musicProvider.selectedCollectionBid;
       final playlistCollections = musicProvider.playlistCollections;
       
-      if (!loadMore) {
-        debugPrint('[MusicPlayPage] 总集合数: ${musicProvider.collections.length}');
-        debugPrint('[MusicPlayPage] 播放列表集合数: ${playlistCollections.length}');
-        debugPrint('[MusicPlayPage] 选中的集合 BID: $selectedCollectionBid');
-      }
-      
       // 优先使用选中的集合，如果没有选中则使用播放列表集合
       List<String> bidsToQuery;
       if (selectedCollectionBid != null && selectedCollectionBid.isNotEmpty) {
         bidsToQuery = [selectedCollectionBid];
-        debugPrint('[MusicPlayPage] 使用选中的集合: $selectedCollectionBid');
       } else if (playlistCollections.isNotEmpty) {
         bidsToQuery = playlistCollections.map((c) => c.bid).toList();
-        debugPrint('[MusicPlayPage] 使用播放列表集合');
       } else {
-        debugPrint('[MusicPlayPage] 没有可用的集合，显示空状态');
         setState(() {
           _musicItems = [];
           _isLoading = false;
@@ -446,11 +437,6 @@ class _MusicPlayPageState extends State<MusicPlayPage> {
       }
       
       final targetPage = loadMore ? _currentPage + 1 : 1;
-      
-      if (!loadMore) {
-        debugPrint('[MusicPlayPage] 查询 BID: $bidsToQuery');
-      }
-      debugPrint('[MusicPlayPage] 加载第 $targetPage 页');
       
       final api = BlockApi(
         connectionProvider: context.read<ConnectionProvider>(),
@@ -468,8 +454,6 @@ class _MusicPlayPageState extends State<MusicPlayPage> {
       final data = response['data'];
       final blocks = _extractBlocksFromResponse(data);
       final musicItems = blocks.map((block) => MusicItem.fromBlock(block)).toList();
-      
-      debugPrint('[MusicPlayPage] 第 $targetPage 页：提取到 ${blocks.length} 个块，转换为 ${musicItems.length} 个音乐项');
 
       setState(() {
         if (loadMore) {
@@ -488,8 +472,6 @@ class _MusicPlayPageState extends State<MusicPlayPage> {
         musicProvider.setPlaylist(_musicItems);
       }
     } catch (error, stackTrace) {
-      debugPrint('[MusicPlayPage] 加载音乐失败: $error');
-      debugPrint('[MusicPlayPage] 堆栈跟踪: $stackTrace');
       if (!mounted) return;
       setState(() {
         if (!loadMore) {
@@ -503,17 +485,13 @@ class _MusicPlayPageState extends State<MusicPlayPage> {
 
   List<BlockModel> _extractBlocksFromResponse(dynamic payload) {
     if (payload is! Map<String, dynamic>) {
-      debugPrint('[MusicPlayPage] payload 不是 Map: ${payload.runtimeType}');
       return const <BlockModel>[];
     }
 
     final items = payload['items'];
     if (items is! List) {
-      debugPrint('[MusicPlayPage] items 不是 List: ${items.runtimeType}');
       return const <BlockModel>[];
     }
-
-    debugPrint('[MusicPlayPage] items 列表长度: ${items.length}');
 
     // 音频文件块的 model ID (这里使用与文件块相同的ID，实际使用时根据你的后端定义)
     const audioModelId = 'c4238dd0d3d95db7b473adb449f6d282';
@@ -529,21 +507,10 @@ class _MusicPlayPageState extends State<MusicPlayPage> {
         .map((item) => BlockModel(data: item))
         .toList();
 
-    debugPrint('[MusicPlayPage] 转换为 BlockModel 的数量: ${allBlocks.length}');
-
     // 过滤出音频块
-    int fileBlockCount = 0;
-    int hasIpfsCount = 0;
-    int audioCount = 0;
-
     final audioBlocks = allBlocks.where((block) {
       final model = block.maybeString('model');
       final isAudioBlock = model == audioModelId;
-      
-      if (isAudioBlock) {
-        fileBlockCount++;
-        debugPrint('[MusicPlayPage] 文件块 ${fileBlockCount}: bid=${block.maybeString('bid')}, name=${block.maybeString('name')}');
-      }
       
       if (!isAudioBlock) {
         return false;
@@ -552,14 +519,7 @@ class _MusicPlayPageState extends State<MusicPlayPage> {
       final ipfs = block.map('ipfs');
       final hasValidIpfs = !ipfs.isEmpty && ipfs['cid'] != null;
       
-      if (hasValidIpfs) {
-        hasIpfsCount++;
-        final ext = ipfs['ext'] as String?;
-        debugPrint('[MusicPlayPage] IPFS 文件 ${hasIpfsCount}: ext=$ext, cid=${ipfs['cid']}');
-      }
-      
       if (!hasValidIpfs) {
-        debugPrint('[MusicPlayPage] 文件块没有有效的 IPFS 信息');
         return false;
       }
 
@@ -567,17 +527,8 @@ class _MusicPlayPageState extends State<MusicPlayPage> {
       final ext = ipfs['ext'] as String?;
       final isAudio = ext != null && audioExtensions.contains(ext);
       
-      if (isAudio) {
-        audioCount++;
-        debugPrint('[MusicPlayPage] ✓ 音频文件 ${audioCount}: $ext - ${block.maybeString('name')}');
-      } else {
-        debugPrint('[MusicPlayPage] ✗ 非音频文件: $ext');
-      }
-      
       return isAudio;
     }).toList();
-
-    debugPrint('[MusicPlayPage] 统计: 文件块=${fileBlockCount}, 有IPFS=${hasIpfsCount}, 音频文件=${audioCount}');
     
     return audioBlocks;
   }

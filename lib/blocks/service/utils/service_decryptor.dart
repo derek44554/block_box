@@ -77,7 +77,6 @@ class ServiceDecryptor {
           // 解析 JSON
           final decryptedData = json.decode(decryptedJson) as Map<String, dynamic>;
 
-          print('成功解密服务数据，使用密钥: ${matchedKey['name']}');
           return DecryptionResult(decryptedData, keyBid);
         } catch (e) {
           print('使用密钥 $keyBid 解密失败: $e');

@@ -36,9 +36,6 @@ class SettingsPage extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
           children: [
-            // 账户与安全分组
-            _buildSectionHeader('账户与安全'),
-            const SizedBox(height: 12),
             _buildSettingItem(
               context,
               icon: Icons.key_outlined,
@@ -54,63 +51,6 @@ class SettingsPage extends StatelessWidget {
             ),
             _buildSettingItem(
               context,
-              icon: Icons.security_outlined,
-              title: '隐私设置',
-              subtitle: '管理隐私和数据安全',
-              onTap: () {
-                // TODO: 跳转到隐私设置页面
-              },
-            ),
-            _buildSettingItem(
-              context,
-              icon: Icons.lock_outline,
-              title: '密码与验证',
-              subtitle: '修改密码和双因素验证',
-              onTap: () {
-                // TODO: 跳转到密码设置页面
-              },
-            ),
-
-            const SizedBox(height: 32),
-
-            // 应用设置分组
-            _buildSectionHeader('应用设置'),
-            const SizedBox(height: 12),
-            _buildSettingItem(
-              context,
-              icon: Icons.palette_outlined,
-              title: '主题设置',
-              subtitle: '自定义应用外观',
-              onTap: () {
-                // TODO: 跳转到主题设置页面
-              },
-            ),
-            _buildSettingItem(
-              context,
-              icon: Icons.language_outlined,
-              title: '语言设置',
-              subtitle: '选择应用语言',
-              onTap: () {
-                // TODO: 跳转到语言设置页面
-              },
-            ),
-            _buildSettingItem(
-              context,
-              icon: Icons.notifications_outlined,
-              title: '通知设置',
-              subtitle: '管理通知偏好',
-              onTap: () {
-                // TODO: 跳转到通知设置页面
-              },
-            ),
-
-            const SizedBox(height: 32),
-
-            // 数据与存储分组
-            _buildSectionHeader('数据与存储'),
-            const SizedBox(height: 12),
-            _buildSettingItem(
-              context,
               icon: Icons.bookmark_outlined,
               title: '收藏备份',
               subtitle: '导出和导入收藏数据',
@@ -122,85 +62,8 @@ class SettingsPage extends StatelessWidget {
                 );
               },
             ),
-            _buildSettingItem(
-              context,
-              icon: Icons.cloud_outlined,
-              title: '同步设置',
-              subtitle: '管理数据同步',
-              onTap: () {
-                // TODO: 跳转到同步设置页面
-              },
-            ),
-            _buildSettingItem(
-              context,
-              icon: Icons.storage_outlined,
-              title: '存储管理',
-              subtitle: '查看和清理缓存',
-              onTap: () {
-                // TODO: 跳转到存储管理页面
-              },
-            ),
-            _buildSettingItem(
-              context,
-              icon: Icons.backup_outlined,
-              title: '备份与恢复',
-              subtitle: '备份和恢复数据',
-              onTap: () {
-                // TODO: 跳转到备份设置页面
-              },
-            ),
-
-            const SizedBox(height: 32),
-
-            // 关于分组
-            _buildSectionHeader('关于'),
-            const SizedBox(height: 12),
-            _buildSettingItem(
-              context,
-              icon: Icons.info_outline,
-              title: '关于应用',
-              subtitle: '版本信息和更新',
-              onTap: () {
-                // TODO: 跳转到关于页面
-              },
-            ),
-            _buildSettingItem(
-              context,
-              icon: Icons.help_outline,
-              title: '帮助与反馈',
-              subtitle: '获取帮助或提供反馈',
-              onTap: () {
-                // TODO: 跳转到帮助页面
-              },
-            ),
-            _buildSettingItem(
-              context,
-              icon: Icons.description_outlined,
-              title: '服务条款',
-              subtitle: '查看服务条款和隐私政策',
-              onTap: () {
-                // TODO: 跳转到服务条款页面
-              },
-            ),
-
             const SizedBox(height: 40),
           ],
-        ),
-      ),
-    );
-  }
-
-  /// 构建分组标题
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 4),
-      child: Text(
-        title,
-        style: const TextStyle(
-          color: Colors.white38,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.8,
         ),
       ),
     );

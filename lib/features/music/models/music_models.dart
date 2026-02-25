@@ -32,17 +32,12 @@ class MusicItem {
     final metadata = block.map('metadata');
     final durationValue = metadata['duration'];
     
-    debugPrint('[MusicItem] metadata: $metadata');
-    debugPrint('[MusicItem] duration 原始值: $durationValue (类型: ${durationValue.runtimeType})');
-    
     if (durationValue is num) {
       // 如果 duration 大于 10000，很可能是毫秒单位
       if (durationValue > 10000) {
         duration = Duration(milliseconds: durationValue.toInt());
-        debugPrint('[MusicItem] 使用毫秒: ${duration.inSeconds} 秒');
       } else {
         duration = Duration(seconds: durationValue.toInt());
-        debugPrint('[MusicItem] 使用秒: ${duration.inSeconds} 秒');
       }
     }
     

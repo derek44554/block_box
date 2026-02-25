@@ -338,7 +338,6 @@ class _LinkPageState extends State<LinkPage> {
         }
       }
     } catch (error) {
-      debugPrint('LinkPage: failed to load link_tag for $bid: $error');
     } finally {
       if (mounted) {
         setState(() => _isLoadingFilterData = false);
@@ -1149,13 +1148,8 @@ class _LinkPageState extends State<LinkPage> {
     if (!mounted) return;
     final route = ModalRoute.of(context);
     if (route == null || !route.isCurrent) {
-      debugPrint('页面不在栈顶，忽略拖拽事件');
       return;
     }
-
-    debugPrint('=== 开始拖拽上传 ===');
-    debugPrint('当前页面 BID: $bid');
-    debugPrint('当前标签索引: $_currentTabIndex');
 
     setState(() => _isUploading = true);
 
@@ -1199,8 +1193,6 @@ class _LinkPageState extends State<LinkPage> {
           // 如果在"链接"标签，需要将新 Block 的 BID 添加到目标 Block 的 link 中
           if (isLinkTab) {
             final newBlockBid = block.data['bid'] as String?;
-            debugPrint('新创建的 Block BID: $newBlockBid');
-            debugPrint('准备更新目标 Block: $bid');
             
             if (newBlockBid != null && newBlockBid.isNotEmpty) {
               // 获取目标 Block
@@ -1211,14 +1203,10 @@ class _LinkPageState extends State<LinkPage> {
                 final updatedData = Map<String, dynamic>.from(targetData);
                 final links = List<String>.from(updatedData['link'] ?? []);
                 
-                debugPrint('目标 Block 原有 link: $links');
-                
                 // 添加新 Block 的 BID
                 if (!links.contains(newBlockBid)) {
                   links.add(newBlockBid);
                   updatedData['link'] = links;
-                  
-                  debugPrint('目标 Block 更新后 link: $links');
                   
                   // 保存更新后的目标 Block
                   await api.saveBlock(data: updatedData);
@@ -1239,7 +1227,6 @@ class _LinkPageState extends State<LinkPage> {
 
           successCount++;
         } catch (e) {
-          debugPrint('上传文件失败: ${xFile.name}, 错误: $e');
           failCount++;
         }
       }

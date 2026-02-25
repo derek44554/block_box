@@ -180,7 +180,6 @@ class _AggregationPageState extends State<AggregationPage> {
         limit: pageLimit,
         tag: tag,
       );
-      debugPrint('Model blocks response for "$model" (page $page, tag: $tag): $response');
 
       if (!mounted || _activeRequestKey != requestKey) {
         return;
@@ -236,8 +235,6 @@ class _AggregationPageState extends State<AggregationPage> {
         }
       });
     } catch (error, stack) {
-      debugPrint('Failed to fetch blocks for model $model: $error');
-      debugPrint('$stack');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

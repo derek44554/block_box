@@ -36,39 +36,17 @@ class BridgeTransport {
       // 清理并规范化 Base64 字符串（去除空白字符，处理填充）
       final normalizedBase64 = CryptoUtil.normalizeBase64(encryptedText);
 
-      if (kDebugMode) {
-        final previewLength = encryptedText.length > 50 ? 50 : encryptedText.length;
-        debugPrint('BridgeTransport: Received encrypted response');
-        debugPrint('  Original: length=${encryptedText.length}, value=${encryptedText.substring(0, previewLength)}...');
-        debugPrint('  Normalized: length=${normalizedBase64.length}');
-      }
-
       // 使用相同的密钥解密响应数据
       String decryptedText;
       try {
         decryptedText = CryptoUtil.decryptBase64(normalizedBase64, connection.keyBase64);
       } catch (error) {
-        if (kDebugMode) {
-          final previewLength = normalizedBase64.length > 50 ? 50 : normalizedBase64.length;
-          debugPrint('BridgeTransport: Decryption failed');
-          debugPrint('  Base64 length: ${normalizedBase64.length}');
-          debugPrint('  Base64 preview: ${normalizedBase64.substring(0, previewLength)}...');
-          debugPrint('  Error: $error');
-        }
         rethrow;
-      }
-
-      if (kDebugMode) {
-        debugPrint('BridgeTransport: Decrypted response: $decryptedText');
       }
 
       // 解析解密后的JSON数据
       return jsonDecode(decryptedText) as Map<String, dynamic>;
     } catch (error, stackTrace) {
-      if (kDebugMode) {
-        debugPrint('BridgeTransport error: $error');
-        debugPrint('$stackTrace');
-      }
       rethrow;
     }
   }

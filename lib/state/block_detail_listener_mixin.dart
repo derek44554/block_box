@@ -44,7 +44,6 @@ mixin BlockDetailListenerMixin<T extends StatefulWidget> on State<T> {
       if (mounted) {
         _blockProviderListener = _onBlockProviderUpdate;
         context.read<BlockProvider>().addListener(_blockProviderListener!);
-        debugPrint('BlockDetailListenerMixin: Added listener for BID: $blockBid');
       }
     });
   }
@@ -54,9 +53,8 @@ mixin BlockDetailListenerMixin<T extends StatefulWidget> on State<T> {
     if (_blockProviderListener != null) {
       try {
         context.read<BlockProvider>().removeListener(_blockProviderListener!);
-        debugPrint('BlockDetailListenerMixin: Removed listener for BID: $blockBid');
       } catch (e) {
-        debugPrint('BlockDetailListenerMixin: Error removing listener: $e');
+        // Listener removal failed
       }
       _blockProviderListener = null;
     }
@@ -69,7 +67,6 @@ mixin BlockDetailListenerMixin<T extends StatefulWidget> on State<T> {
     if (bid == null || bid.isEmpty) return;
 
     if (!shouldUpdateBlock()) {
-      debugPrint('BlockDetailListenerMixin: Skipped update for BID: $bid (shouldUpdateBlock returned false)');
       return;
     }
 
@@ -78,12 +75,10 @@ mixin BlockDetailListenerMixin<T extends StatefulWidget> on State<T> {
       final updatedBlock = blockProvider.getBlock(bid);
 
       if (updatedBlock != null) {
-        debugPrint('BlockDetailListenerMixin: Received update for BID: $bid');
         onBlockUpdated(updatedBlock);
-        debugPrint('BlockDetailListenerMixin: UI updated for BID: $bid');
       }
     } catch (e) {
-      debugPrint('BlockDetailListenerMixin: Error in update handler: $e');
+      // Error in update handler
     }
   }
 }

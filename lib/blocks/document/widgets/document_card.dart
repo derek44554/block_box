@@ -31,10 +31,9 @@ class DocumentCard extends StatelessWidget {
                 final latestBlock = blockProvider.getBlock(bid);
                 if (latestBlock != null) {
                   blockToOpen = latestBlock;
-                  debugPrint('DocumentCard: Using latest Block from BlockProvider for BID: $bid');
                 }
               } catch (e) {
-                debugPrint('DocumentCard: Could not get BlockProvider, using original block: $e');
+                // Could not get BlockProvider
               }
             }
             AppRouter.openBlockDetailPage(context, blockToOpen);

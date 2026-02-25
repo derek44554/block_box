@@ -26,23 +26,18 @@ class AutoGpsService {
       // 1. 检查是否应该创建GPS记录
       final shouldCreate = await TraceSettingsManager.shouldCreateGpsRecord();
       if (!shouldCreate) {
-        debugPrint('AutoGpsService: 不满足自动记录条件，跳过');
         return;
       }
 
       // 2. 检查是否配置了痕迹节点BID
       final traceBid = await TraceSettingsManager.loadTraceNodeBid();
       if (traceBid.trim().isEmpty || traceBid.length < 10) {
-        debugPrint('AutoGpsService: 未配置痕迹节点BID，跳过');
         return;
       }
-
-      debugPrint('AutoGpsService: 开始自动创建GPS记录');
 
       // 3. 获取GPS位置
       final position = await _getLocation();
       if (position == null) {
-        debugPrint('AutoGpsService: 无法获取GPS位置，跳过');
         return;
       }
 
@@ -63,10 +58,8 @@ class AutoGpsService {
       // 6. 更新最后记录时间
       await TraceSettingsManager.saveLastGpsRecordTime(DateTime.now());
 
-      debugPrint('AutoGpsService: GPS记录创建成功（介绍: $intro, 标签: $tags）');
     } catch (e, stackTrace) {
-      debugPrint('AutoGpsService: 自动创建GPS记录失败: $e');
-      debugPrint('AutoGpsService: $stackTrace');
+      // GPS record creation failed
     }
   }
 
@@ -76,7 +69,6 @@ class AutoGpsService {
       // 检查位置服务是否启用
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        debugPrint('AutoGpsService: 位置服务未启用');
         return null;
       }
 
@@ -85,13 +77,11 @@ class AutoGpsService {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          debugPrint('AutoGpsService: 位置权限被拒绝');
           return null;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        debugPrint('AutoGpsService: 位置权限被永久拒绝');
         return null;
       }
 
@@ -103,7 +93,6 @@ class AutoGpsService {
 
       return position;
     } catch (e) {
-      debugPrint('AutoGpsService: 获取位置失败: $e');
       return null;
     }
   }

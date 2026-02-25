@@ -823,10 +823,6 @@ class _ImageEditPageState extends State<ImageEditPage> with BlockEditMixin {
       final blockProvider = context.read<BlockProvider>();
       blockProvider.updateBlock(BlockModel(data: Map<String, dynamic>.from(blockData)));
 
-      debugPrint(
-        'ImageEditPage: saved block ipfs data -> ${blockData['ipfs']}',
-      );
-
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('图片创建成功')));
@@ -839,8 +835,6 @@ class _ImageEditPageState extends State<ImageEditPage> with BlockEditMixin {
       }
     } catch (error, stackTrace) {
       if (!mounted) return;
-      debugPrint('图片创建失败: $error');
-      debugPrint(stackTrace.toString());
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('创建失败：$error')));

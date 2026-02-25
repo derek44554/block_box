@@ -196,9 +196,8 @@ mixin BlockEditMixin<T extends StatefulWidget> on State<T> {
     try {
       final blockProvider = context.read<BlockProvider>();
       blockProvider.updateBlock(resultBlock);
-      debugPrint('BlockEditMixin: Updated BlockProvider after save with BID: ${resultBlock.bid}');
     } catch (e) {
-      debugPrint('BlockEditMixin: Error updating BlockProvider: $e');
+      // Error updating BlockProvider
     }
     
     ScaffoldMessenger.of(context).showSnackBar(

@@ -866,7 +866,6 @@ class _ArticleEditPageState extends State<ArticleEditPage> with BlockEditMixin {
       Navigator.of(context).pop(resultBlock);
     } catch (error) {
       if (!mounted) return;
-      debugPrint('文章创建失败: $error');
       _showMessage('创建失败：$error');
     } finally {
       if (mounted) {
@@ -959,7 +958,6 @@ class _ArticleEditPageState extends State<ArticleEditPage> with BlockEditMixin {
       Navigator.of(context).pop(resultBlock);
     } catch (error) {
       if (!mounted) return;
-      debugPrint('文章更新失败: $error');
       _showMessage('更新失败：$error');
     } finally {
       if (mounted) {

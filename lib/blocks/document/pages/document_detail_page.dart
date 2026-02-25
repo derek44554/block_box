@@ -103,7 +103,6 @@ class _DocumentDetailPageState extends State<DocumentDetailPage>
         // Listen to BlockProvider for updates
         _blockProviderListener = _onBlockProviderUpdate;
         context.read<BlockProvider>().addListener(_blockProviderListener!);
-        debugPrint('DocumentDetailPage: Added BlockProvider listener for BID: $_effectiveBid');
       }
     });
   }
@@ -122,9 +121,8 @@ class _DocumentDetailPageState extends State<DocumentDetailPage>
     if (_blockProviderListener != null) {
       try {
         context.read<BlockProvider>().removeListener(_blockProviderListener!);
-        debugPrint('DocumentDetailPage: Removed BlockProvider listener');
       } catch (e) {
-        debugPrint('DocumentDetailPage: Error removing BlockProvider listener: $e');
+        // Error removing listener
       }
       _blockProviderListener = null;
     }
@@ -144,7 +142,6 @@ class _DocumentDetailPageState extends State<DocumentDetailPage>
       final updatedBlock = blockProvider.getBlock(bid);
       
       if (updatedBlock != null) {
-        debugPrint('DocumentDetailPage: Received updated Block from BlockProvider for BID: $bid');
         
         // Only update if user is not currently editing
         if (!_hasChanges && !_titleFocusNode.hasFocus && !_contentFocusNode.hasFocus) {
@@ -159,13 +156,10 @@ class _DocumentDetailPageState extends State<DocumentDetailPage>
             _originalContent = _normalizeText(newContent);
             _linkCount = _extractLinkCount(updatedBlock.data);
           });
-          debugPrint('DocumentDetailPage: UI updated with latest Block data');
-        } else {
-          debugPrint('DocumentDetailPage: Skipped update because user is editing');
         }
       }
     } catch (e) {
-      debugPrint('DocumentDetailPage: Error in _onBlockProviderUpdate: $e');
+      // Error in update handler
     }
   }
 
@@ -247,9 +241,7 @@ class _DocumentDetailPageState extends State<DocumentDetailPage>
       // BlockProvider automatically notifies all listeners (including list pages)
       final blockProvider = context.read<BlockProvider>();
       final blockToUpdate = BlockModel(data: Map<String, dynamic>.from(payload));
-      debugPrint('DocumentDetailPage: Updating BlockProvider with BID: ${blockToUpdate.bid}');
       blockProvider.updateBlock(blockToUpdate);
-      debugPrint('DocumentDetailPage: BlockProvider updated, cache size: ${blockProvider.cacheSize}');
       
       await _refreshLinkCount();
     } catch (error) {
@@ -294,7 +286,6 @@ class _DocumentDetailPageState extends State<DocumentDetailPage>
         });
       }
     } catch (error) {
-      debugPrint('Failed to refresh link count: $error');
       if (mounted) {
         setState(() => _isLinkLoading = false);
       }

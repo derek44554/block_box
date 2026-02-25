@@ -123,9 +123,6 @@ class _RecordListState extends State<_RecordList> {
             : null,
         excludeModels: widget.showGps ? null : ['5b877cf0259538958f4ce032a1de7ae7'],
       );
-      debugPrint(
-        'TraceRecordPage: getAllBlocks response = ${response.toString()}',
-      );
 
       final dataMap = response['data'];
       if (dataMap is Map<String, dynamic>) {
@@ -152,7 +149,6 @@ class _RecordListState extends State<_RecordList> {
         setState(() => _hasMore = false);
       }
     } catch (error) {
-      debugPrint('TraceRecordPage: failed to load blocks: $error');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

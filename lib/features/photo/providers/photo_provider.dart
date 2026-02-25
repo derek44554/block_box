@@ -100,7 +100,6 @@ class PhotoProvider extends ChangeNotifier {
       final restored = await compute(_parseCollections, payload);
       _collections = restored;
     } catch (e) {
-      debugPrint('Failed to restore photo collections: $e');
       _collections = const [];
     }
 

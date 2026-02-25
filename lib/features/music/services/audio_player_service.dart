@@ -46,7 +46,6 @@ class AudioPlayerService extends ChangeNotifier {
 
     // 监听播放完成
     _player.onPlayerComplete.listen((_) {
-      debugPrint('[AudioPlayerService] 播放完成');
       _position = Duration.zero;
       notifyListeners();
       
@@ -76,10 +75,6 @@ class AudioPlayerService extends ChangeNotifier {
       // 获取音频扩展名
       final ipfs = music.block.map('ipfs');
       final extension = (ipfs['ext'] as String?) ?? '.mp3';
-      
-      debugPrint('[AudioPlayerService] 播放音乐: ${music.title}');
-      debugPrint('[AudioPlayerService] CID: $cid');
-      debugPrint('[AudioPlayerService] Extension: $extension');
 
       _currentMusic = music;
       await _player.stop();
@@ -87,35 +82,28 @@ class AudioPlayerService extends ChangeNotifier {
       // 1. 检查本地缓存
       final cachedFile = await AudioCacheHelper.getCachedAudio(cid, extension);
       if (cachedFile != null) {
-        debugPrint('[AudioPlayerService] 使用缓存文件: ${cachedFile.path}');
         await _player.play(DeviceFileSource(cachedFile.path));
         notifyListeners();
         return;
       }
 
       // 2. 从网络加载
-      debugPrint('[AudioPlayerService] 从网络加载...');
       final url = IpfsFileHelper.buildUrl(endpoint: endpoint, cid: cid);
       if (url == null) {
         throw Exception('无法构建 IPFS URL');
       }
-      
-      debugPrint('[AudioPlayerService] URL: $url');
 
       // 下载并缓存
       final bytes = await _downloadAudio(url);
-      debugPrint('[AudioPlayerService] 下载完成: ${bytes.length} bytes');
       
       // 保存到缓存
       final savedFile = await AudioCacheHelper.saveAudioToCache(cid, bytes, extension);
-      debugPrint('[AudioPlayerService] 已缓存到: ${savedFile.path}');
       
       // 播放缓存文件
       await _player.play(DeviceFileSource(savedFile.path));
       
       notifyListeners();
     } catch (e) {
-      debugPrint('[AudioPlayerService] 播放失败: $e');
       rethrow;
     }
   }

@@ -42,8 +42,6 @@ class _BlockDetailPageState extends State<BlockDetailPage> {
       if (mounted) {
         _blockProviderListener = _onBlockProviderUpdate;
         context.read<BlockProvider>().addListener(_blockProviderListener!);
-        final bid = widget.block.bid;
-        debugPrint('BlockDetailPage: Added BlockProvider listener for BID: $bid');
       }
     });
   }
@@ -54,9 +52,8 @@ class _BlockDetailPageState extends State<BlockDetailPage> {
     if (_blockProviderListener != null) {
       try {
         context.read<BlockProvider>().removeListener(_blockProviderListener!);
-        debugPrint('BlockDetailPage: Removed BlockProvider listener');
       } catch (e) {
-        debugPrint('BlockDetailPage: Error removing BlockProvider listener: $e');
+        // Error removing listener
       }
       _blockProviderListener = null;
     }
@@ -75,14 +72,12 @@ class _BlockDetailPageState extends State<BlockDetailPage> {
       final updatedBlock = blockProvider.getBlock(bid);
       
       if (updatedBlock != null) {
-        debugPrint('BlockDetailPage: Received updated Block from BlockProvider for BID: $bid');
         setState(() {
           _blockData = Map<String, dynamic>.from(updatedBlock.data);
         });
-        debugPrint('BlockDetailPage: UI updated with latest Block data');
       }
     } catch (e) {
-      debugPrint('BlockDetailPage: Error in _onBlockProviderUpdate: $e');
+      // Error in update handler
     }
   }
 
@@ -296,9 +291,8 @@ class _BlockDetailPageState extends State<BlockDetailPage> {
         try {
           final blockProvider = context.read<BlockProvider>();
           blockProvider.updateBlock(result);
-          debugPrint('BlockDetailPage: Updated BlockProvider after edit with BID: ${result.bid}');
         } catch (e) {
-          debugPrint('BlockDetailPage: Error updating BlockProvider: $e');
+          // Error updating BlockProvider
         }
         
         ScaffoldMessenger.of(

@@ -49,11 +49,8 @@ class CollectBackupService {
       final file = File(outputFile);
       await file.writeAsString(jsonString, encoding: utf8);
       
-      debugPrint('CollectBackupService: 导出成功，文件路径: $outputFile');
       return ExportResult.success(outputFile);
     } catch (error, stack) {
-      debugPrint('CollectBackupService: 导出失败: $error');
-      debugPrint('$stack');
       return ExportResult.error('导出失败：${error.toString()}');
     }
   }
@@ -90,8 +87,6 @@ class CollectBackupService {
 
       return await _importBackupData(collectProvider, aggregationProvider, backupData, mergeMode);
     } catch (error, stack) {
-      debugPrint('CollectBackupService: 导入失败: $error');
-      debugPrint('$stack');
       return ImportResult.error('导入失败：${error.toString()}');
     }
   }
@@ -119,8 +114,6 @@ class CollectBackupService {
 
       return await _importBackupData(collectProvider, aggregationProvider, backupData, mergeMode);
     } catch (error, stack) {
-      debugPrint('CollectBackupService: 从文件导入失败: $error');
-      debugPrint('$stack');
       return ImportResult.error('导入失败：${error.toString()}');
     }
   }
@@ -297,8 +290,6 @@ class CollectBackupService {
         importedAggregationItems: importedAggregationItems,
       );
     } catch (error, stack) {
-      debugPrint('CollectBackupService: 处理备份数据失败: $error');
-      debugPrint('$stack');
       return ImportResult.error('处理备份数据失败：${error.toString()}');
     }
   }

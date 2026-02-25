@@ -57,9 +57,6 @@ class ConnectionProvider extends ChangeNotifier {
         (connection) => connection.address == original.address && connection.name == original.name,
       );
       if (targetIndex == -1) {
-        if (kDebugMode) {
-          debugPrint('updateConnection: original connection not found for address=${original.address} name=${original.name}');
-        }
         return;
       }
     }
@@ -74,10 +71,19 @@ class ConnectionProvider extends ChangeNotifier {
     unawaited(verifyConnection(nextConnections[targetIndex].address));
   }
 
-  Future<void> updateStatus(String address, ConnectionStatus status, {Map<String, dynamic>? nodeData}) async {
+  Future<void> updateStatus(
+    String address,
+    ConnectionStatus status, {
+    Map<String, dynamic>? nodeData,
+    Map<String, dynamic>? signatureData,
+  }) async {
     _connections = _connections.map((connection) {
       if (connection.address == address) {
-        return connection.copyWith(status: status, nodeData: nodeData);
+        return connection.copyWith(
+          status: status,
+          nodeData: nodeData,
+          signatureData: signatureData,
+        );
       }
       return connection;
     }).toList();
@@ -111,7 +117,8 @@ class ConnectionProvider extends ChangeNotifier {
     }
 
     try {
-      final response = await BridgeTransport.post(
+      // 获取节点信息
+      final nodeResponse = await BridgeTransport.post(
         connection: refreshed,
         payload: const {
           'protocol': 'open',
@@ -122,15 +129,43 @@ class ConnectionProvider extends ChangeNotifier {
           'timeout': 60,
         },
       );
-      if (kDebugMode) {
-        debugPrint('Connection [$address] node info: $response');
-      }
-      await updateStatus(address, ConnectionStatus.connected, nodeData: response);
+
+      await updateStatus(
+        address,
+        ConnectionStatus.connected,
+        nodeData: nodeResponse,
+      );
     } catch (error) {
-      if (kDebugMode) {
-        debugPrint('verifyConnection failed for $address: $error');
-      }
       await updateStatus(address, ConnectionStatus.offline);
+    }
+  }
+
+  Future<void> fetchSignature(String address) async {
+    final connection = _findConnection(address);
+    if (connection == null) {
+      return;
+    }
+
+    try {
+      final signatureResponse = await BridgeTransport.post(
+        connection: connection,
+        payload: const {
+          'protocol': 'open',
+          'routing': '/node/signature',
+          'data': <String, dynamic>{},
+          'receiver': '',
+          'wait': true,
+          'timeout': 60,
+        },
+      );
+      
+      await updateStatus(
+        address,
+        connection.status,
+        signatureData: signatureResponse,
+      );
+    } catch (error) {
+      // Failed to get signature
     }
   }
 

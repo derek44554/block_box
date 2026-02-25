@@ -49,8 +49,6 @@ class _RawDataPageState extends State<RawDataPage> {
     final rawJsonCompact = jsonEncode(widget.block.data);
     final prettyJson = const JsonEncoder.withIndent('  ').convert(widget.block.data);
 
-    debugPrint('[RawDataPage] block data: $rawJsonCompact');
-
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(

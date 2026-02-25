@@ -239,10 +239,6 @@ class _MusicCollectionPageState extends State<MusicCollectionPage> {
       _setAddCollectionError(error.message);
       rethrow;
     } catch (error, stack) {
-      debugPrint(
-        'Failed to add music collection for bid=$normalizedBid: $error',
-      );
-      debugPrint('$stack');
       const message = '加载失败，请稍后重试';
       _setAddCollectionError(message);
       throw StateError(message);

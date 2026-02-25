@@ -49,9 +49,6 @@ class BlockProvider extends ChangeNotifier {
   void updateBlock(BlockModel block) {
     final bid = block.bid;
     if (bid == null || bid.isEmpty) {
-      if (kDebugMode) {
-        debugPrint('BlockProvider.updateBlock: Block has no BID, skipping');
-      }
       return;
     }
 
@@ -66,14 +63,6 @@ class BlockProvider extends ChangeNotifier {
       // Remove oldest entry (first in LinkedHashMap)
       final oldestKey = _blockCache.keys.first;
       _blockCache.remove(oldestKey);
-      
-      if (kDebugMode) {
-        debugPrint('BlockProvider: Evicted oldest Block (BID: $oldestKey) due to cache limit');
-      }
-    }
-
-    if (kDebugMode) {
-      debugPrint('BlockProvider: Updated Block (BID: $bid, cache size: ${_blockCache.length})');
     }
 
     // Notify all listeners (list pages, card widgets, etc.)
@@ -87,11 +76,6 @@ class BlockProvider extends ChangeNotifier {
   void removeBlock(String bid) {
     if (_blockCache.containsKey(bid)) {
       _blockCache.remove(bid);
-      
-      if (kDebugMode) {
-        debugPrint('BlockProvider: Removed Block (BID: $bid, cache size: ${_blockCache.length})');
-      }
-      
       notifyListeners();
     }
   }
@@ -101,11 +85,6 @@ class BlockProvider extends ChangeNotifier {
   /// This can be used when switching accounts or clearing app data.
   void clearCache() {
     _blockCache.clear();
-    
-    if (kDebugMode) {
-      debugPrint('BlockProvider: Cleared all cached Blocks');
-    }
-    
     notifyListeners();
   }
 

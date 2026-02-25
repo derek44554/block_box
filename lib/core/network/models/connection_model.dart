@@ -5,6 +5,7 @@ class ConnectionModel {
     required this.keyBase64,
     required this.status,
     this.nodeData,
+    this.signatureData,
     this.isActive = false,
     this.enableIpfsStorage = false,
     this.ipfsUploadPassword,
@@ -15,6 +16,7 @@ class ConnectionModel {
   final String keyBase64;
   final ConnectionStatus status;
   final Map<String, dynamic>? nodeData;
+  final Map<String, dynamic>? signatureData;
   final bool isActive;
   final bool enableIpfsStorage;
   final String? ipfsUploadPassword;
@@ -26,6 +28,8 @@ class ConnectionModel {
     ConnectionStatus? status,
     Map<String, dynamic>? nodeData,
     bool clearNodeData = false,
+    Map<String, dynamic>? signatureData,
+    bool clearSignatureData = false,
     bool? isActive,
     bool? enableIpfsStorage,
     String? ipfsUploadPassword,
@@ -37,12 +41,19 @@ class ConnectionModel {
             ? Map<String, dynamic>.from(nodeData)
             : (this.nodeData != null ? Map<String, dynamic>.from(this.nodeData!) : null));
 
+    final resolvedSignatureData = clearSignatureData
+        ? null
+        : (signatureData != null
+            ? Map<String, dynamic>.from(signatureData)
+            : (this.signatureData != null ? Map<String, dynamic>.from(this.signatureData!) : null));
+
     return ConnectionModel(
       name: name ?? this.name,
       address: address ?? this.address,
       keyBase64: keyBase64 ?? this.keyBase64,
       status: status ?? this.status,
       nodeData: resolvedNodeData,
+      signatureData: resolvedSignatureData,
       isActive: isActive ?? this.isActive,
       enableIpfsStorage: enableIpfsStorage ?? this.enableIpfsStorage,
       ipfsUploadPassword: clearIpfsUploadPassword ? null : (ipfsUploadPassword ?? this.ipfsUploadPassword),
@@ -57,6 +68,7 @@ class ConnectionModel {
       status: ConnectionStatus.values[json['status'] as int? ?? 0],
       isActive: json['isActive'] as bool? ?? false,
       nodeData: json['nodeData'] as Map<String, dynamic>?,
+      signatureData: json['signatureData'] as Map<String, dynamic>?,
       enableIpfsStorage: json['enableIpfsStorage'] as bool? ?? false,
       ipfsUploadPassword: json['ipfsUploadPassword'] as String?,
     );
@@ -69,6 +81,7 @@ class ConnectionModel {
       'keyBase64': keyBase64,
       'status': status.index,
       'nodeData': nodeData,
+      'signatureData': signatureData,
       'isActive': isActive,
       'enableIpfsStorage': enableIpfsStorage,
       'ipfsUploadPassword': ipfsUploadPassword,

@@ -27,25 +27,18 @@ class MusicProvider extends ChangeNotifier {
 
   /// 播放完成时自动播放下一首
   void _onPlaybackComplete() {
-    debugPrint('[MusicProvider] 播放完成，尝试播放下一首');
     if (currentPlaying == null || _playlist.isEmpty) {
-      debugPrint('[MusicProvider] 没有当前播放或播放列表为空');
       return;
     }
     
     final currentIndex = _playlist.indexWhere((item) => item.bid == currentPlaying!.bid);
     if (currentIndex >= 0 && currentIndex < _playlist.length - 1) {
       final nextMusic = _playlist[currentIndex + 1];
-      debugPrint('[MusicProvider] 自动播放下一首: ${nextMusic.title}');
       
       // 使用保存的 endpoint
       if (_lastEndpoint != null && _lastEndpoint!.isNotEmpty) {
         play(nextMusic, endpoint: _lastEndpoint!);
-      } else {
-        debugPrint('[MusicProvider] 没有可用的 endpoint');
       }
-    } else {
-      debugPrint('[MusicProvider] 已是最后一首，播放完毕');
     }
   }
 
@@ -140,7 +133,6 @@ class MusicProvider extends ChangeNotifier {
       _lastEndpoint = endpoint; // 保存 endpoint 用于自动播放下一首
       await _audioService.play(item, endpoint: endpoint);
     } catch (e) {
-      debugPrint('[MusicProvider] 播放失败: $e');
       rethrow;
     }
   }
@@ -225,7 +217,6 @@ class MusicProvider extends ChangeNotifier {
       final restored = await compute(_parseCollections, payload);
       _collections = restored;
     } catch (e) {
-      debugPrint('Failed to restore music collections: $e');
       _collections = const [];
     }
 

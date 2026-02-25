@@ -583,7 +583,6 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> with BlockDetailL
 
       _showMessage('文件已保存');
     } catch (e) {
-      debugPrint('文章下载失败: $e');
       _showMessage('下载失败: $e');
     } finally {
       if (mounted) {

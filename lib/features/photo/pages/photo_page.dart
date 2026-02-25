@@ -248,10 +248,6 @@ class _PhotoPageState extends State<PhotoPage> {
       _setAddCollectionError(error.message);
       rethrow;
     } catch (error, stack) {
-      debugPrint(
-        'Failed to add photo collection for bid=$normalizedBid: $error',
-      );
-      debugPrint('$stack');
       const message = '加载失败，请稍后重试';
       _setAddCollectionError(message);
       throw StateError(message);
@@ -369,8 +365,6 @@ class _PhotoPageState extends State<PhotoPage> {
         });
       }
     } catch (error, stackTrace) {
-      debugPrint('[PhotoPage] 加载照片失败: $error');
-      debugPrint('[PhotoPage] 堆栈跟踪: $stackTrace');
       if (!mounted) return;
       setState(() {
         if (loadMore) {

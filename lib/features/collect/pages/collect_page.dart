@@ -1564,7 +1564,6 @@ class _CollectPageState extends State<CollectPage> {
     if (!mounted) return;
     final route = ModalRoute.of(context);
     if (route == null || !route.isCurrent) {
-      debugPrint('页面不在栈顶，忽略拖拽事件');
       return;
     }
 
@@ -1608,7 +1607,6 @@ class _CollectPageState extends State<CollectPage> {
 
           successCount++;
         } catch (e) {
-          debugPrint('上传文件失败: ${xFile.name}, 错误: $e');
           failCount++;
         }
       }

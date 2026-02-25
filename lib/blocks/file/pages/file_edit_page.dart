@@ -758,8 +758,7 @@ class _FileEditPageState extends State<FileEditPage> with BlockEditMixin {
             // 2. 提取GPS信息
             gps = _getGpsCoordinates(exifData);
           } catch (e) {
-            debugPrint('EXIF提取失败: $e');
-            // 继续使用文件时间，不影响整体流程
+            // EXIF extraction failed
           }
         }
       }
@@ -1069,10 +1068,6 @@ class _FileEditPageState extends State<FileEditPage> with BlockEditMixin {
       final blockProvider = context.read<BlockProvider>();
       blockProvider.updateBlock(BlockModel(data: Map<String, dynamic>.from(blockData)));
 
-      debugPrint(
-        'FileEditPage: saved block ipfs data -> ${blockData['ipfs']}',
-      );
-
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('文件创建成功')));
@@ -1085,8 +1080,6 @@ class _FileEditPageState extends State<FileEditPage> with BlockEditMixin {
       }
     } catch (error, stackTrace) {
       if (!mounted) return;
-      debugPrint('文件创建失败: $error');
-      debugPrint(stackTrace.toString());
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('创建失败：$error')));

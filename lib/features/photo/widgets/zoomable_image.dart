@@ -161,7 +161,6 @@ class _ZoomableImageState extends State<ZoomableImage> {
       widget.photo.previewBytes = result.bytes;
       widget.photo.previewVariant = result.variant;
     } catch (error) {
-      debugPrint('[ZoomableImage] 加载预览失败: $error');
       if (mounted && _placeholderImage == null) {
         setState(() => _hasError = true);
       }
@@ -195,7 +194,6 @@ class _ZoomableImageState extends State<ZoomableImage> {
         _hasError = false;
       });
     } catch (error) {
-      debugPrint('[ZoomableImage] 加载原图失败: $error');
       if (mounted && _originalImage == null) {
         setState(() => _hasError = true);
       }

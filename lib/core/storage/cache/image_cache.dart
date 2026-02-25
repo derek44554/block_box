@@ -122,8 +122,7 @@ class ImageCacheHelper {
     try {
       await file.setLastModified(DateTime.now());
     } catch (error, stackTrace) {
-      debugPrint('[ImageCache] Failed to update access time: $error');
-      debugPrint(stackTrace.toString());
+      // Failed to update access time
     }
   }
 
@@ -140,8 +139,7 @@ class ImageCacheHelper {
         return file;
       }
     } catch (error, stackTrace) {
-      debugPrint('[ImageCache] Failed to read cache for $cid: $error');
-      debugPrint(stackTrace.toString());
+      // Failed to read cache
     }
     return null;
   }
@@ -157,8 +155,7 @@ class ImageCacheHelper {
       await _updateAccessTime(file);
       _scheduleCleanup();
     } catch (error, stackTrace) {
-      debugPrint('[ImageCache] Failed to write cache for $cid: $error');
-      debugPrint(stackTrace.toString());
+      // Failed to write cache
     }
   }
 
@@ -219,8 +216,7 @@ class ImageCacheHelper {
           await file.delete();
         }
       } catch (error, stackTrace) {
-        debugPrint('[ImageCache] Failed to delete cache for $cid/${variant.name}: $error');
-        debugPrint(stackTrace.toString());
+        // Failed to delete cache
       }
     }
   }
@@ -273,8 +269,7 @@ class ImageCacheHelper {
             ),
           );
         } catch (error, stackTrace) {
-          debugPrint('[ImageCache] Failed to stat ${entity.path}: $error');
-          debugPrint(stackTrace.toString());
+          // Failed to stat file
         }
       }
 
@@ -293,13 +288,11 @@ class ImageCacheHelper {
           await entry.file.delete();
           totalSize -= entry.size;
         } catch (error, stackTrace) {
-          debugPrint('[ImageCache] Failed to delete ${entry.file.path}: $error');
-          debugPrint(stackTrace.toString());
+          // Failed to delete file
         }
       }
     } catch (error, stackTrace) {
-      debugPrint('[ImageCache] Cache cleanup failed: $error');
-      debugPrint(stackTrace.toString());
+      // Cache cleanup failed
     }
   }
 
@@ -347,8 +340,6 @@ class ImageCacheHelper {
       }
       return byteData.buffer.asUint8List();
     } catch (error, stackTrace) {
-      debugPrint('[ImageCache] Variant generation failed for $cid/${variant.name}: $error');
-      debugPrint(stackTrace.toString());
       rethrow;
     }
   }

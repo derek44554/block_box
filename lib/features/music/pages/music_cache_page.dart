@@ -39,7 +39,6 @@ class _MusicCachePageState extends State<MusicCachePage> {
         _isLoading = false;
       });
     } catch (e) {
-      debugPrint('[MusicCachePage] 加载缓存信息失败: $e');
       if (!mounted) return;
       setState(() {
         _isLoading = false;

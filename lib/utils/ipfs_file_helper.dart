@@ -61,8 +61,6 @@ class IpfsFileHelper {
 
       return fileBytes;
     } catch (e, stack) {
-      debugPrint('[IPFS] Error downloading $cid : $e');
-      debugPrint(stack.toString());
       rethrow;
     }
   }
@@ -112,8 +110,6 @@ class IpfsFileHelper {
 
       return response.bodyBytes;
     } catch (error, stack) {
-      debugPrint('[IPFS] Error loading raw $cid : $error');
-      debugPrint(stack.toString());
       rethrow;
     }
   }

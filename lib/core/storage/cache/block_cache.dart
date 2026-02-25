@@ -27,7 +27,6 @@ class BlockCache {
     // 1. 检查内存缓存
     final memoryEntry = _memoryCache[trimmedBid];
     if (memoryEntry != null && !memoryEntry.isExpired) {
-      debugPrint('[BlockCache] Memory cache hit: $trimmedBid');
       memoryEntry.updateAccessTime();
       return memoryEntry.block;
     }
@@ -47,7 +46,6 @@ class BlockCache {
           final age = DateTime.now().difference(cacheTime);
 
           if (age < cacheTTL) {
-            debugPrint('[BlockCache] Disk cache hit: $trimmedBid (age: ${age.inMinutes}m)');
             final block = BlockModel(data: blockData);
             
             // 更新到内存缓存
@@ -55,19 +53,16 @@ class BlockCache {
             
             return block;
           } else {
-            debugPrint('[BlockCache] Disk cache expired: $trimmedBid (age: ${age.inMinutes}m)');
             // 过期数据，删除
             await _removeDisk(trimmedBid);
           }
         }
       }
     } catch (e) {
-      debugPrint('[BlockCache] Disk cache read error: $e');
       // 磁盘缓存读取失败，删除损坏的数据
       await _removeDisk(trimmedBid);
     }
 
-    debugPrint('[BlockCache] Cache miss: $trimmedBid');
     return null;
   }
 
@@ -91,9 +86,8 @@ class BlockCache {
         '$_cachePrefix$trimmedBid',
         jsonEncode(cacheData),
       );
-      debugPrint('[BlockCache] Saved to cache: $trimmedBid');
     } catch (e) {
-      debugPrint('[BlockCache] Disk cache write error: $e');
+      // Disk cache write error
     }
   }
 
@@ -104,7 +98,6 @@ class BlockCache {
     final trimmedBid = bid.trim();
     _memoryCache.remove(trimmedBid);
     await _removeDisk(trimmedBid);
-    debugPrint('[BlockCache] Removed from cache: $trimmedBid');
   }
 
   /// 清除所有缓存
@@ -120,9 +113,8 @@ class BlockCache {
       for (final key in cacheKeys) {
         await prefs.remove(key);
       }
-      debugPrint('[BlockCache] Cleared all cache (${cacheKeys.length} entries)');
     } catch (e) {
-      debugPrint('[BlockCache] Clear cache error: $e');
+      // Clear cache error
     }
   }
 
@@ -161,7 +153,6 @@ class BlockCache {
 
     if (oldestKey != null) {
       _memoryCache.remove(oldestKey);
-      debugPrint('[BlockCache] Evicted from memory: $oldestKey');
     }
   }
 
@@ -171,7 +162,7 @@ class BlockCache {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('$_cachePrefix$bid');
     } catch (e) {
-      debugPrint('[BlockCache] Disk cache delete error: $e');
+      // Disk cache delete error
     }
   }
 }

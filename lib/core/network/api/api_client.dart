@@ -41,10 +41,6 @@ class ApiClient {
       'timeout': timeout,
     };
 
-    if (kDebugMode) {
-      debugPrint('ApiClient.postToBridge payload: ${jsonEncode(payload)}');
-    }
-
     return BridgeTransport.post(connection: connection, payload: payload);
   }
 }
