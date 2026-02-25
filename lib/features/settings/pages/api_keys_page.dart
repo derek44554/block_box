@@ -1,9 +1,11 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:yaml/yaml.dart';
 
 import '../services/api_keys_manager.dart';
+import 'api_key_detail_page.dart';
 
 
 /// 密钥管理页面
@@ -69,9 +71,48 @@ class _ApiKeysPageState extends State<ApiKeysPage> {
         ),
         centerTitle: true,
         actions: [
-          IconButton(
+          PopupMenuButton<String>(
             icon: const Icon(Icons.add, color: Colors.white70, size: 24),
-            onPressed: _addNewApiKey,
+            tooltip: '添加密钥',
+            color: const Color(0xFF2A2A2A),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            onSelected: (value) {
+              if (value == 'import') {
+                _addNewApiKey();
+              } else if (value == 'create') {
+                _createNewApiKey();
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'import',
+                child: Row(
+                  children: [
+                    Icon(Icons.file_upload_outlined, color: Colors.white70, size: 20),
+                    SizedBox(width: 12),
+                    Text(
+                      '导入',
+                      style: TextStyle(color: Colors.white, fontSize: 15),
+                    ),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'create',
+                child: Row(
+                  children: [
+                    Icon(Icons.add_circle_outline, color: Colors.white70, size: 20),
+                    SizedBox(width: 12),
+                    Text(
+                      '创建',
+                      style: TextStyle(color: Colors.white, fontSize: 15),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -104,14 +145,14 @@ class _ApiKeysPageState extends State<ApiKeysPage> {
         children: [
           Icon(
             Icons.key_off_outlined,
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             size: 80,
           ),
           const SizedBox(height: 20),
           Text(
             '暂无 API 密钥',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
@@ -120,7 +161,7 @@ class _ApiKeysPageState extends State<ApiKeysPage> {
           Text(
             '点击右上角 + 添加新密钥',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
               fontSize: 13,
             ),
           ),
@@ -132,33 +173,34 @@ class _ApiKeysPageState extends State<ApiKeysPage> {
   /// 构建 API 密钥项
   Widget _buildApiKeyItem(Map<String, dynamic> apiKey) {
     final bid = apiKey['bid'] ?? '';
-    final key = apiKey['key'] ?? '';
     final name = apiKey['name'] ?? '';
     final intro = apiKey['intro'] ?? '';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.04),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.08),
-          width: 1,
+    return GestureDetector(
+      onTap: () => _navigateToDetail(apiKey),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.08),
+            width: 1,
+          ),
         ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 顶部：图标、名称和删除按钮
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+            // 顶部：图标和名称
             Row(
               children: [
                 Container(
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.06),
+                    color: Colors.white.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -188,7 +230,7 @@ class _ApiKeysPageState extends State<ApiKeysPage> {
                         Text(
                           intro,
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.white.withValues(alpha: 0.5),
                             fontSize: 12,
                             letterSpacing: 0.2,
                           ),
@@ -199,15 +241,11 @@ class _ApiKeysPageState extends State<ApiKeysPage> {
                     ],
                   ),
                 ),
-                // 删除按钮
-                IconButton(
-                  icon: Icon(
-                    Icons.delete_outline,
-                    color: Colors.white.withOpacity(0.5),
-                    size: 20,
-                  ),
-                  onPressed: () => _deleteApiKey(apiKey),
-                  tooltip: '删除',
+                // 右箭头图标
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: Colors.white.withValues(alpha: 0.3),
+                  size: 16,
                 ),
               ],
             ),
@@ -223,14 +261,15 @@ class _ApiKeysPageState extends State<ApiKeysPage> {
             
             const SizedBox(height: 12),
             
-            // Key
+            // Key (隐藏显示)
             _buildFieldRow(
               label: 'Key',
-              value: key,
+              value: '•' * 32,
               icon: Icons.vpn_key_outlined,
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -247,7 +286,7 @@ class _ApiKeysPageState extends State<ApiKeysPage> {
       children: [
         Icon(
           icon,
-          color: Colors.white.withOpacity(0.3),
+          color: Colors.white.withValues(alpha: 0.3),
           size: 16,
         ),
         const SizedBox(width: 8),
@@ -258,7 +297,7 @@ class _ApiKeysPageState extends State<ApiKeysPage> {
               Text(
                 label,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.5),
+                  color: Colors.white.withValues(alpha: 0.5),
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
                   letterSpacing: 0.5,
@@ -268,10 +307,10 @@ class _ApiKeysPageState extends State<ApiKeysPage> {
               Text(
                 value,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   fontSize: 13,
                   fontFamily: label == 'Intro' ? null : 'monospace',
-                  letterSpacing: label == 'Intro' ? 0.3 : 0.5,
+                  letterSpacing: label == 'Key' ? 2.0 : (label == 'Intro' ? 0.3 : 0.5),
                   height: 1.4,
                 ),
                 maxLines: maxLines,
@@ -282,6 +321,20 @@ class _ApiKeysPageState extends State<ApiKeysPage> {
         ),
       ],
     );
+  }
+
+  /// 导航到密钥详情页
+  Future<void> _navigateToDetail(Map<String, dynamic> apiKey) async {
+    final deleted = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => ApiKeyDetailPage(apiKey: apiKey),
+      ),
+    );
+    
+    // 如果密钥被删除，刷新列表
+    if (deleted == true) {
+      await _loadApiKeys();
+    }
   }
 
   /// 添加新密钥
@@ -402,23 +455,57 @@ class _ApiKeysPageState extends State<ApiKeysPage> {
     }
   }
 
-  /// 删除密钥
-  Future<void> _deleteApiKey(Map<String, dynamic> apiKey) async {
-    final bid = apiKey['bid'] as String;
-    
-    // 显示确认对话框
-    final confirmed = await showDialog<bool>(
+  /// 创建新密钥
+  Future<void> _createNewApiKey() async {
+    final nameController = TextEditingController();
+    final introController = TextEditingController();
+
+    final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E1E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
-          '确认删除',
+          '创建新密钥',
           style: TextStyle(color: Colors.white),
         ),
-        content: Text(
-          '确定要删除密钥 "$bid" 吗？此操作无法撤销。',
-          style: const TextStyle(color: Colors.white70),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Name',
+                labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                hintText: '例如: Block加密',
+                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: introController,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Intro',
+                labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                hintText: '例如: 正式key',
+                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -427,37 +514,122 @@ class _ApiKeysPageState extends State<ApiKeysPage> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('删除', style: TextStyle(color: Colors.redAccent)),
+            child: const Text('创建', style: TextStyle(color: Colors.greenAccent)),
           ),
         ],
       ),
     );
 
-    if (confirmed != true) return;
+    if (result != true) {
+      nameController.dispose();
+      introController.dispose();
+      return;
+    }
 
-    // 执行删除
-    final success = await ApiKeysManager.deleteApiKey(bid);
+    final name = nameController.text.trim();
+    final intro = introController.text.trim();
     
-    if (!mounted) return;
-    
-    if (success) {
-      // 重新加载列表
-      await _loadApiKeys();
-      
+    nameController.dispose();
+    introController.dispose();
+
+    if (name.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('密钥已删除'),
-          backgroundColor: Colors.green,
+          content: Text('Name 不能为空'),
+          backgroundColor: Colors.red,
         ),
       );
-    } else {
+      return;
+    }
+
+    // 使用状态变量显示加载，不使用对话框
+    setState(() => _isLoading = true);
+
+    try {
+      // 生成 BID (32位16进制)
+      final bid = _generateBid();
+      
+      // 生成 Key (64位16进制，等同于 os.urandom(32).hex())
+      final key = _generateKey();
+      
+      // 固定的 model
+      const model = 'e9b837c9afa0d5d25f78eae3a76a665d';
+
+      final keyData = {
+        'bid': bid,
+        'key': key,
+        'name': name,
+        'intro': intro,
+        'model': model,
+      };
+
+      // 添加到本地存储
+      final success = await ApiKeysManager.addApiKey(keyData);
+
+      if (!mounted) return;
+      
+      setState(() => _isLoading = false);
+
+      if (success) {
+        // 直接添加到列表
+        setState(() {
+          _apiKeys.add(keyData);
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('密钥创建成功'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('密钥创建失败'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      
+      setState(() => _isLoading = false);
+      
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('删除失败'),
+        SnackBar(
+          content: Text('创建失败: $e'),
           backgroundColor: Colors.red,
         ),
       );
     }
+  }
+
+  /// 生成32位16进制的BID
+  String _generateBid() {
+    final random = Random.secure();
+    final buffer = StringBuffer();
+    
+    // 生成16字节的随机数据（32个十六进制字符）
+    for (var i = 0; i < 16; i++) {
+      final value = random.nextInt(256);
+      buffer.write(value.toRadixString(16).padLeft(2, '0'));
+    }
+    
+    return buffer.toString();
+  }
+
+  /// 生成64位16进制的Key (等同于 Python 的 os.urandom(32).hex())
+  String _generateKey() {
+    final random = Random.secure();
+    final buffer = StringBuffer();
+    
+    // 生成32字节的随机数据（64个十六进制字符）
+    for (var i = 0; i < 32; i++) {
+      final value = random.nextInt(256);
+      buffer.write(value.toRadixString(16).padLeft(2, '0'));
+    }
+    
+    return buffer.toString();
   }
 }
