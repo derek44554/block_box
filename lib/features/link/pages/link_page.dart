@@ -53,6 +53,8 @@ class _LinkPageState extends State<LinkPage> {
   static const int _pageSize = 20;
   bool _isDragging = false;
   bool _isUploading = false;
+  String? _linkSortOrder; // 链接页面的排序顺序
+  String? _externalSortOrder; // 外链页面的排序顺序
 
   static const Map<String, String> _modelOptions = {
     '34c00af3a2d32129327766285361b0c1': '普通块',
@@ -69,8 +71,10 @@ class _LinkPageState extends State<LinkPage> {
     super.initState();
     _currentTabIndex = widget.initialIndex;
     if (widget.bid != null && widget.bid!.trim().isNotEmpty) {
-      _fetchLinkTargets();
-      _fetchLinkMains();
+      _loadLinkSettings().then((_) {
+        _fetchLinkTargets();
+        _fetchLinkMains();
+      });
       _loadAvailableLinkTags();
     }
     
@@ -163,6 +167,7 @@ class _LinkPageState extends State<LinkPage> {
         bid: bid,
         page: targetPage,
         limit: _pageSize,
+        order: _linkSortOrder,
       );
       final data = response['data'];
       final blocks = _extractBlocksFromResponse(data);
@@ -240,6 +245,7 @@ class _LinkPageState extends State<LinkPage> {
         limit: _pageSize,
         model: _modelFilter,
         tag: _tagFilter,
+        order: _externalSortOrder,
       );
       final data = response['data'];
       final blocks = _extractBlocksFromResponse(data);
@@ -547,6 +553,133 @@ class _LinkPageState extends State<LinkPage> {
       _tagFilter = null;
     });
     _fetchLinkMains();
+  }
+
+  /// 加载链接页面的排序设置
+  Future<void> _loadLinkSettings() async {
+    final bid = widget.bid;
+    if (bid == null || bid.trim().isEmpty) {
+      return;
+    }
+
+    try {
+      final api = BlockApi(
+        connectionProvider: context.read<ConnectionProvider>(),
+      );
+      final response = await api.getBlock(bid: bid);
+      final data = response['data'];
+      
+      if (data is Map<String, dynamic>) {
+        final linkOrder = data['link_order'];
+        final externalOrder = data['external_order'];
+        
+        if (mounted) {
+          setState(() {
+            _linkSortOrder = (linkOrder is String && linkOrder.isNotEmpty) ? linkOrder : null;
+            _externalSortOrder = (externalOrder is String && externalOrder.isNotEmpty) ? externalOrder : null;
+          });
+        }
+      }
+    } catch (e) {
+      // 忽略加载设置失败的错误，使用默认值
+    }
+  }
+
+  /// 保存排序设置到 Block
+  Future<void> _saveSortSettings(String bid, {String? linkOrder, String? externalOrder}) async {
+    try {
+      final api = BlockApi(
+        connectionProvider: context.read<ConnectionProvider>(),
+      );
+      final response = await api.getBlock(bid: bid);
+      final data = response['data'];
+      
+      if (data is Map<String, dynamic>) {
+        final updatedData = Map<String, dynamic>.from(data);
+        
+        if (linkOrder != null) {
+          if (linkOrder.isNotEmpty) {
+            updatedData['link_order'] = linkOrder;
+          } else {
+            updatedData.remove('link_order');
+          }
+        }
+        
+        if (externalOrder != null) {
+          if (externalOrder.isNotEmpty) {
+            updatedData['external_order'] = externalOrder;
+          } else {
+            updatedData.remove('external_order');
+          }
+        }
+        
+        await api.saveBlock(data: updatedData);
+        
+        if (mounted) {
+          context.read<BlockProvider>().updateBlock(BlockModel(data: updatedData));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('保存排序设置失败：$e')),
+        );
+      }
+    }
+  }
+
+  /// 切换链接页面的排序顺序
+  Future<void> _toggleLinkSortOrder() async {
+    final bid = widget.bid;
+    if (bid == null || bid.trim().isEmpty) {
+      return;
+    }
+
+    String? newOrder;
+    if (_linkSortOrder == null) {
+      newOrder = 'desc';
+    } else if (_linkSortOrder == 'desc') {
+      newOrder = 'asc';
+    } else {
+      newOrder = null;
+    }
+
+    setState(() {
+      _linkSortOrder = newOrder;
+    });
+
+    await _saveSortSettings(bid, linkOrder: newOrder ?? '');
+    
+    if (mounted) {
+      await _fetchLinkTargets();
+    }
+  }
+
+  /// 切换外链页面的排序顺序
+  Future<void> _toggleExternalSortOrder() async {
+    final bid = widget.bid;
+    if (bid == null || bid.trim().isEmpty) {
+      return;
+    }
+
+    String? newOrder;
+    if (_externalSortOrder == null) {
+      newOrder = 'desc';
+    } else if (_externalSortOrder == 'desc') {
+      newOrder = 'asc';
+    } else {
+      newOrder = null;
+    }
+
+    setState(() {
+      _externalSortOrder = newOrder;
+    });
+
+    await _saveSortSettings(bid, externalOrder: newOrder ?? '');
+    
+    if (mounted) {
+      await _fetchLinkMains();
+    }
   }
 
   Widget _buildLinkTargetsTab(bool useGridLayout) {
@@ -1006,24 +1139,45 @@ class _LinkPageState extends State<LinkPage> {
 
   List<Widget>? _buildHeaderActions(bool useGridLayout, bool canPersist) {
     final icon =
-        useGridLayout ? Icons.view_list_outlined : Icons.grid_view_outlined;
-    final tooltip = useGridLayout ? '切换为列表视图' : '切换为网格视图';
+        useGridLayout ? Icons.list : Icons.grid_view;
+    final tooltip = useGridLayout ? '切换列表模式' : '切换网格模式';
+    
+    // 根据当前标签页决定使用哪个排序状态
+    final currentSortOrder = _currentTabIndex == 0 ? _linkSortOrder : _externalSortOrder;
+    
     return [
-      Tooltip(
-        message: tooltip,
-        child: IconButton(
-          onPressed: () async {
-            if (canPersist && widget.bid != null) {
-              await context
-                  .read<CollectProvider>()
-                  .setGridLayoutForBid(widget.bid!, !useGridLayout);
-            } else {
-              setState(() => _useGridLayout = !useGridLayout);
-            }
-          },
-          icon: Icon(icon, color: Colors.white),
-          splashRadius: 18,
+      // 排序按钮
+      IconButton(
+        tooltip: currentSortOrder == null 
+            ? '按时间排序' 
+            : (currentSortOrder == 'desc' ? '降序排列' : '升序排列'),
+        icon: Icon(
+          currentSortOrder == null 
+              ? Icons.sort 
+              : (currentSortOrder == 'desc' ? Icons.arrow_downward : Icons.arrow_upward),
+          color: currentSortOrder != null ? Colors.blue : Colors.white70,
+          size: 20,
         ),
+        onPressed: () {
+          if (_currentTabIndex == 0) {
+            _toggleLinkSortOrder();
+          } else {
+            _toggleExternalSortOrder();
+          }
+        },
+      ),
+      IconButton(
+        tooltip: tooltip,
+        icon: Icon(icon, color: Colors.white70, size: 20),
+        onPressed: () async {
+          if (canPersist && widget.bid != null) {
+            await context
+                .read<CollectProvider>()
+                .setGridLayoutForBid(widget.bid!, !useGridLayout);
+          } else {
+            setState(() => _useGridLayout = !useGridLayout);
+          }
+        },
       ),
     ];
   }

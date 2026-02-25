@@ -183,7 +183,8 @@ class _CollectPageState extends State<CollectPage> {
       _currentPage = 1;
       _selectionRestored = true;
     });
-    _loadCollectionSettings(resolvedItem.bid);
+    // 先加载设置（包括排序），等待完成后再加载数据
+    await _loadCollectionSettings(resolvedItem.bid);
     _fetchLinkBlocks(context: context, bid: resolvedItem.bid, page: 1);
   }
 
@@ -219,8 +220,10 @@ class _CollectPageState extends State<CollectPage> {
     });
 
     if (_selectedCollection != null) {
-      _loadCollectionSettings(item.bid);
-      _fetchLinkBlocks(context: context, bid: item.bid, page: 1);
+      // 先加载设置（包括排序），等待完成后再加载数据
+      _loadCollectionSettings(item.bid).then((_) {
+        _fetchLinkBlocks(context: context, bid: item.bid, page: 1);
+      });
       _loadAvailableLinkTags(item.bid);
     } else {
       setState(() {

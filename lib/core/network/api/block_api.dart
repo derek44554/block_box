@@ -44,12 +44,18 @@ class BlockApi {
     required dynamic bid,
     int page = 1,
     int limit = 10,
+    String? order,
   }) async {
     final normalizedBid = _normalizeBid(bid);
 
     final response = await _client.postToBridge(
       routing: '/block/link/target/multiple',
-      data: {'bid': normalizedBid, 'page': page, 'limit': limit},
+      data: {
+        'bid': normalizedBid,
+        'page': page,
+        'limit': limit,
+        if (order != null && order.isNotEmpty) 'order': order,
+      },
     );
 
     return response;
