@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import 'package:block_app/core/network/models/connection_model.dart';
 import '../../../../../state/connection_provider.dart';
+import '../pages/connection_status_page.dart';
 import 'node_hero_status.dart';
 import 'placeholder_message.dart';
 import 'section_card.dart';
@@ -69,6 +70,8 @@ class _NodeInfoViewState extends State<NodeInfoView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           NodeHeroStatus(connection: connection),
+          const SizedBox(height: 16),
+          _buildConnectionStatusButton(context),
           const SizedBox(height: 28),
           SectionCard(
             title: '节点详情',
@@ -124,6 +127,77 @@ class _NodeInfoViewState extends State<NodeInfoView> {
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildConnectionStatusButton(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const ConnectionStatusPage(),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF1A1A1A),
+              const Color(0xFF1A1A1A).withOpacity(0.8),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.1),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.hub_outlined,
+                size: 20,
+                color: Colors.blue,
+              ),
+            ),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Text(
+                '节点状态',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 14,
+              color: Colors.white.withOpacity(0.4),
+            ),
+          ],
+        ),
       ),
     );
   }
