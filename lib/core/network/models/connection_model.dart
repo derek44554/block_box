@@ -8,7 +8,6 @@ class ConnectionModel {
     this.signatureData,
     this.isActive = false,
     this.enableIpfsStorage = false,
-    this.ipfsUploadPassword,
   });
 
   final String name;
@@ -19,7 +18,6 @@ class ConnectionModel {
   final Map<String, dynamic>? signatureData;
   final bool isActive;
   final bool enableIpfsStorage;
-  final String? ipfsUploadPassword;
 
   ConnectionModel copyWith({
     String? name,
@@ -32,8 +30,6 @@ class ConnectionModel {
     bool clearSignatureData = false,
     bool? isActive,
     bool? enableIpfsStorage,
-    String? ipfsUploadPassword,
-    bool clearIpfsUploadPassword = false,
   }) {
     final resolvedNodeData = clearNodeData
         ? null
@@ -56,7 +52,6 @@ class ConnectionModel {
       signatureData: resolvedSignatureData,
       isActive: isActive ?? this.isActive,
       enableIpfsStorage: enableIpfsStorage ?? this.enableIpfsStorage,
-      ipfsUploadPassword: clearIpfsUploadPassword ? null : (ipfsUploadPassword ?? this.ipfsUploadPassword),
     );
   }
 
@@ -70,7 +65,6 @@ class ConnectionModel {
       nodeData: json['nodeData'] as Map<String, dynamic>?,
       signatureData: json['signatureData'] as Map<String, dynamic>?,
       enableIpfsStorage: json['enableIpfsStorage'] as bool? ?? false,
-      ipfsUploadPassword: json['ipfsUploadPassword'] as String?,
     );
   }
 
@@ -84,7 +78,6 @@ class ConnectionModel {
       'signatureData': signatureData,
       'isActive': isActive,
       'enableIpfsStorage': enableIpfsStorage,
-      'ipfsUploadPassword': ipfsUploadPassword,
     };
   }
 }

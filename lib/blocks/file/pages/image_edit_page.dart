@@ -25,6 +25,7 @@ import '../../../core/routing/app_router.dart';
 import '../../../core/storage/cache/image_cache.dart';
 import '../../../core/utils/formatters/time_formatter.dart';
 import '../../../core/utils/generators/bid_generator.dart';
+import '../../../core/utils/helpers/ipfs_password_helper.dart';
 import '../../../state/connection_provider.dart';
 import '../../../state/block_provider.dart';
 import '../../../utils/block_image_loader.dart';
@@ -783,7 +784,7 @@ class _ImageEditPageState extends State<ImageEditPage> with BlockEditMixin {
         file: tempFile,
         endpoint: uploadUrl.toString(),
         encrypt: _encryptFile,
-        uploadPassword: storageConnection.ipfsUploadPassword ?? '',
+        nodeKeyBase64: storageConnection.keyBase64,
       );
 
       final cid = ipfsData['cid'] as String?;
@@ -914,14 +915,14 @@ class _ImageEditPageState extends State<ImageEditPage> with BlockEditMixin {
     required File file,
     required String endpoint,
     required bool encrypt,
-    required String uploadPassword,
+    required String nodeKeyBase64,
   }) async {
     final manager = _UploadTaskManager(
       sourceFile: file,
       endpoint: endpoint,
       encrypt: encrypt,
       fileExtension: _fileExtension,
-      uploadPassword: uploadPassword,
+      nodeKeyBase64: nodeKeyBase64,
     );
 
     try {
@@ -938,14 +939,14 @@ class _UploadTaskManager {
     required this.endpoint,
     required this.encrypt,
     required this.fileExtension,
-    required this.uploadPassword,
+    required this.nodeKeyBase64,
   });
 
   final File sourceFile;
   final String endpoint;
   final bool encrypt;
   final String? fileExtension;
-  final String uploadPassword;
+  final String nodeKeyBase64;
 
   final List<String> _generatedTempFiles = [];
   String? _tempDirectoryPath;
@@ -1002,6 +1003,9 @@ class _UploadTaskManager {
   Future<String> _uploadToIpfs(String uploadPath) async {
     final endpointUrl = Uri.parse(endpoint);
     final uploadUrl = endpointUrl.replace(path: '/ipfs/ipfs/upload');
+
+    // Compute upload password from node key
+    final uploadPassword = IpfsPasswordHelper.computeUploadPassword(nodeKeyBase64);
 
     final request = http.MultipartRequest('POST', uploadUrl)
       ..fields['password'] = uploadPassword

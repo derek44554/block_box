@@ -266,7 +266,6 @@ class _ConnectionFormDialogState extends State<_ConnectionFormDialog> {
   late final TextEditingController _nameController;
   late final TextEditingController _addressController;
   late final TextEditingController _keyController;
-  late final TextEditingController _ipfsPasswordController;
   bool _enableIpfsStorage = false;
   bool _isSubmitting = false;
 
@@ -280,9 +279,6 @@ class _ConnectionFormDialogState extends State<_ConnectionFormDialog> {
     _keyController = TextEditingController(
       text: widget.initial?.keyBase64 ?? '',
     );
-    _ipfsPasswordController = TextEditingController(
-      text: widget.initial?.ipfsUploadPassword ?? '',
-    );
     _enableIpfsStorage = widget.initial?.enableIpfsStorage ?? false;
   }
 
@@ -291,7 +287,6 @@ class _ConnectionFormDialogState extends State<_ConnectionFormDialog> {
     _nameController.dispose();
     _addressController.dispose();
     _keyController.dispose();
-    _ipfsPasswordController.dispose();
     super.dispose();
   }
 
@@ -370,15 +365,6 @@ class _ConnectionFormDialogState extends State<_ConnectionFormDialog> {
               value: _enableIpfsStorage,
               onChanged: (value) => setState(() => _enableIpfsStorage = value),
             ),
-            if (_enableIpfsStorage) ...[
-              const SizedBox(height: 14),
-              AppDialogTextField(
-                controller: _ipfsPasswordController,
-                label: 'IPFS 上传密码',
-                hintText: '用于 IPFS 文件上传的密码',
-                initialObscureText: true,
-              ),
-            ],
             if (widget.isEditing) ...[
               const SizedBox(height: 24),
               OutlinedButton.icon(
@@ -434,9 +420,6 @@ class _ConnectionFormDialogState extends State<_ConnectionFormDialog> {
                             address: _addressController.text.trim(),
                             keyBase64: _keyController.text.trim(),
                             enableIpfsStorage: _enableIpfsStorage,
-                            ipfsUploadPassword: _ipfsPasswordController.text.trim().isEmpty 
-                                ? null 
-                                : _ipfsPasswordController.text.trim(),
                           ),
                         );
                       } else {
@@ -447,9 +430,6 @@ class _ConnectionFormDialogState extends State<_ConnectionFormDialog> {
                             keyBase64: _keyController.text.trim(),
                             status: ConnectionStatus.offline,
                             enableIpfsStorage: _enableIpfsStorage,
-                            ipfsUploadPassword: _ipfsPasswordController.text.trim().isEmpty 
-                                ? null 
-                                : _ipfsPasswordController.text.trim(),
                           ),
                         );
                       }

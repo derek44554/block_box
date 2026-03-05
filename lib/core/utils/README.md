@@ -16,6 +16,7 @@
   - `platform_helper.dart` - 平台判断
   - `file_helper.dart` - 文件操作
   - `permission_helper.dart` - 权限管理
+  - `ipfs_password_helper.dart` - IPFS 上传密码计算
 - `extensions/` - 扩展方法
   - `string_extensions.dart` - 字符串扩展
   - `date_extensions.dart` - 日期扩展
@@ -66,6 +67,26 @@ final timestamp = nowIso8601WithOffset();
 // 格式化指定时间
 final formatted = iso8601WithOffset(DateTime.now());
 ```
+
+### IPFS 上传密码计算
+
+```dart
+// 从节点密钥计算 IPFS 上传密码
+final uploadPassword = IpfsPasswordHelper.computeUploadPassword(nodeKeyBase64);
+// 算法: SHA3-256(nodeKeyBase64 + "IPFS")
+// 返回: 64位十六进制字符串
+```
+
+**使用场景**：
+- 在文件上传到 IPFS 时，需要提供上传密码
+- 密码通过节点密钥（Base64 格式）派生而来
+- 使用 SHA-3 256 哈希算法确保安全性
+
+**算法说明**：
+1. 将节点密钥（Base64 字符串）与字符串 "IPFS" 拼接
+2. 对拼接结果进行 UTF-8 编码
+3. 使用 SHA-3 256 算法计算哈希值
+4. 将哈希值转换为 64 位十六进制字符串
 
 ## 注意事项
 

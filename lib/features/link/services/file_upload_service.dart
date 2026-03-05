@@ -15,6 +15,7 @@ import '../../../core/network/api/block_api.dart';
 import '../../../core/storage/cache/image_cache.dart';
 import '../../../core/utils/formatters/time_formatter.dart';
 import '../../../core/utils/generators/bid_generator.dart';
+import '../../../core/utils/helpers/ipfs_password_helper.dart';
 import '../../../state/connection_provider.dart';
 
 /// 文件上传服务，用于处理拖拽上传文件
@@ -51,7 +52,7 @@ class FileUploadService {
       endpoint: storageConnection.address,
       encrypt: encrypt,
       fileExtension: fileInfo.extension,
-      uploadPassword: storageConnection.ipfsUploadPassword ?? '',
+      nodeKeyBase64: storageConnection.keyBase64,
     );
 
     // 如果是图片，缓存预览
@@ -249,14 +250,14 @@ class FileUploadService {
     required String endpoint,
     required bool encrypt,
     required String fileExtension,
-    required String uploadPassword,
+    required String nodeKeyBase64,
   }) async {
     final manager = _UploadTaskManager(
       sourceFile: file,
       endpoint: endpoint,
       encrypt: encrypt,
       fileExtension: fileExtension,
-      uploadPassword: uploadPassword,
+      nodeKeyBase64: nodeKeyBase64,
     );
 
     try {
@@ -294,7 +295,7 @@ class _UploadTaskManager {
   final String endpoint;
   final bool encrypt;
   final String fileExtension;
-  final String uploadPassword;
+  final String nodeKeyBase64;
 
   final List<String> _generatedTempFiles = [];
   String? _tempDirectoryPath;
@@ -304,7 +305,7 @@ class _UploadTaskManager {
     required this.endpoint,
     required this.encrypt,
     required this.fileExtension,
-    required this.uploadPassword,
+    required this.nodeKeyBase64,
   });
 
   Future<Map<String, dynamic>> execute() async {
@@ -358,6 +359,9 @@ class _UploadTaskManager {
   Future<String> _uploadToIpfsEndpoint(String uploadPath) async {
     final endpointUrl = Uri.parse(endpoint);
     final uploadUrl = endpointUrl.replace(path: '/ipfs/ipfs/upload');
+
+    // Compute upload password from node key
+    final uploadPassword = IpfsPasswordHelper.computeUploadPassword(nodeKeyBase64);
 
     final request = http.MultipartRequest('POST', uploadUrl)
       ..fields['password'] = uploadPassword
