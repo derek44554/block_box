@@ -188,6 +188,24 @@ lib/
 - 集合与集合项均通过统一弹窗新增，集合项要求填写标题与 BID，调用 `CollectProvider.addEntry()`、`addItem()`。
 - 所有模型定义于 `lib/models/collect_models.dart`，页面组件读取 Provider 数据并实时刷新。
 
+### 数据备份与恢复
+
+应用提供了统一的数据备份和恢复功能，支持导出和导入收藏、聚集、相册和音乐的所有数据。
+
+- **备份范围**：包含收藏标签与条目、聚集项目、相册集合、音乐集合的完整数据
+- **导出功能**：通过 `CollectBackupService.exportAllDataWithDialog()` 将数据导出为 JSON 格式文件
+  - 用户可通过目录选择对话框自主选择保存位置
+  - 文件名格式：`app_backup_<时间戳>.json`
+  - 增强的错误处理：验证文件路径有效性、确认文件写入成功、验证文件大小
+  - 详细的错误提示：针对不同失败场景提供具体的错误信息（包含文件路径）
+  - 调试日志：导出过程中记录关键步骤，便于问题排查
+  - 支持用户取消操作
+- **导入功能**：通过 `CollectBackupService.importAllData()` 从 JSON 文件恢复数据，支持合并模式（不覆盖现有数据）
+- **数据迁移**：备份文件可在不同设备间传输，方便数据迁移和同步
+- **实现位置**：`lib/features/collect/services/collect_backup_service.dart` 和 `lib/features/collect/pages/collect_backup_page.dart`
+
+建议用户定期备份重要数据，以防数据丢失。
+
 ### 相册集合
 
 照片页（`PhotoPage`）支持在集合分段中手动新增集合，并将数据序列化到本地。
