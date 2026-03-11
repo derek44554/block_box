@@ -154,12 +154,6 @@ class _HomePageState extends State<HomePage> {
                     runSpacing: 16,
                     children: [
                       _FeatureButton(
-                        icon: Icons.smart_toy_outlined,
-                        label: 'AI',
-                        onTap: () =>
-                            Navigator.of(context).pushNamed(RouteNames.ai),
-                      ),
-                      _FeatureButton(
                         icon: Icons.star_border_rounded,
                         label: '收藏管理',
                         onTap: () =>

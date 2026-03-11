@@ -16,7 +16,6 @@ import '../../../core/models/block_model.dart';
 import '../../../core/network/api/block_api.dart';
 import '../../../state/connection_provider.dart';
 import '../../aggregation/pages/aggregation_page.dart';
-import '../../ai/pages/ai_page.dart';
 import '../../collect/pages/collect_page.dart';
 import '../../music/pages/music_page.dart';
 import '../../photo/pages/photo_page.dart';
@@ -24,7 +23,7 @@ import '../../trace/pages/trace_page.dart';
 import '../widgets/home_header.dart';
 import '../widgets/mac_menu_button.dart';
 
-enum MacHomeSection { overview, aggregation, ai, photo, music, collect, trace }
+enum MacHomeSection { overview, aggregation, photo, music, collect, trace }
 
 class MacHomePage extends StatefulWidget {
   const MacHomePage({super.key});
@@ -43,15 +42,7 @@ class _MacHomePageState extends State<MacHomePage> {
       icon: Icons.blur_linear,
       accentColor: Color(0xFF86A1FF),
     ),
-    _MacMenuItem(
-      section: MacHomeSection.ai,
-      label: 'AI 助手',
-      description: '使用 Block AI 快速总结、生成指令与脚本，提升处理效率。',
-      highlights: ['多段上下文', '嵌入式总结', '脚本草稿'],
-      icon: Icons.smart_toy_outlined,
-      accentColor: Color(0xFFB388FF),
-      routeName: RouteNames.ai,
-    ),
+
     _MacMenuItem(
       section: MacHomeSection.collect,
       label: '收藏',
@@ -447,8 +438,6 @@ class _MacHomePageState extends State<MacHomePage> {
       switch (section) {
         case MacHomeSection.aggregation:
           return const AggregationPage();
-        case MacHomeSection.ai:
-          return const AIPage();
         case MacHomeSection.photo:
           return const PhotoPage();
         case MacHomeSection.music:

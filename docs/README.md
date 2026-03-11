@@ -99,8 +99,12 @@ lib/
 │   ├── photo/            # 相册功能
 │   ├── collect/          # 收藏功能
 │   ├── music/            # 音乐功能
+│   ├── aggregation/      # 聚集功能
 │   ├── home/             # 首页
 │   ├── settings/         # 设置
+│   ├── link/             # 链接功能
+│   ├── tag/              # 标签功能
+│   ├── trace/            # 追踪功能
 │   └── ...               # 其他功能模块
 │
 ├── blocks/                # Block 类型处理
@@ -129,7 +133,7 @@ lib/
 
 ### 页面骨架
 
-应用内存在多个带顶部分段切换的页面（如 `FavoritePage`、`PhotoPage`、`LinkPage`、`AIPage`）。
+应用内存在多个带顶部分段切换的页面（如 `FavoritePage`、`PhotoPage`、`LinkPage`）。
 这些页面统一由 `lib/components/layout/segmented_page_scaffold.dart` 提供的 `SegmentedPageScaffold` 构建。
 
 - 仅需传入标题、分段名称和页面列表即可构建；内部自动管理 `PageController` 与当前索引。

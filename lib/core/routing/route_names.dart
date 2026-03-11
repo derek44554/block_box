@@ -9,7 +9,6 @@ class RouteNames {
   static const String link = '/link';
   static const String photo = '/photo';
   static const String music = '/music';
-  static const String ai = '/ai';
   static const String trace = '/trace';
   static const String settings = '/settings';
 }

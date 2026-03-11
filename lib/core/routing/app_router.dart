@@ -11,7 +11,6 @@ import '../../blocks/file/utils/file_category.dart';
 import '../../blocks/file/pages/video_detail_page.dart';
 import '../../blocks/file/pages/file_detail_page.dart';
 import '../../features/aggregation/pages/aggregation_page.dart';
-import '../../features/ai/pages/ai_page.dart';
 import '../../features/collect/pages/collect_page.dart';
 import '../../features/home/pages/home_page.dart';
 import '../../features/home/pages/mac_home_page.dart';
@@ -51,7 +50,6 @@ class AppRouter {
     RouteNames.collect: (context, settings) => CollectPage(),
     RouteNames.photo: (context, settings) => PhotoPage(),
     RouteNames.music: (context, settings) => const MusicPage(),
-    RouteNames.ai: (context, settings) => AIPage(),
     RouteNames.trace: (context, settings) => const TracePage(),
     RouteNames.settings: (context, settings) => const SettingsPage(),
     RouteNames.tag: (context, settings) {
