@@ -17,7 +17,6 @@ import 'package:block_app/core/models/block_model.dart';
 import 'package:block_app/core/network/api/block_api.dart';
 import 'package:block_app/state/connection_provider.dart';
 import 'package:block_app/core/utils/helpers/platform_helper.dart';
-import 'package:block_app/features/trace/services/auto_gps_service.dart';
 import 'mac_home_page.dart';
 import '../widgets/home_header.dart';
 
@@ -35,16 +34,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    // 尝试自动创建GPS记录
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _tryAutoCreateGps();
-    });
-  }
-
-  Future<void> _tryAutoCreateGps() async {
-    if (!mounted) return;
-    final connectionProvider = context.read<ConnectionProvider>();
-    await AutoGpsService.tryAutoCreateGpsRecord(context, connectionProvider);
   }
 
   @override
@@ -164,24 +153,6 @@ class _HomePageState extends State<HomePage> {
                         label: '聚集',
                         onTap: () =>
                             Navigator.of(context).pushNamed(RouteNames.aggregation),
-                      ),
-                      _FeatureButton(
-                        icon: Icons.photo_album_outlined,
-                        label: '相册',
-                        onTap: () =>
-                            Navigator.of(context).pushNamed(RouteNames.photo),
-                      ),
-                      _FeatureButton(
-                        icon: Icons.music_note_outlined,
-                        label: '音乐',
-                        onTap: () =>
-                            Navigator.of(context).pushNamed(RouteNames.music),
-                      ),
-                      _FeatureButton(
-                        icon: Icons.history,
-                        label: '痕迹',
-                        onTap: () =>
-                            Navigator.of(context).pushNamed(RouteNames.trace),
                       ),
                       _FeatureButton(
                         icon: Icons.add_circle_outline,

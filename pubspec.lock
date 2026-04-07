@@ -25,14 +25,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.7.0"
-  asn1lib:
-    dependency: "direct main"
-    description:
-      name: asn1lib
-      sha256: "9a8f69025044eb466b9b60ef3bc3ac99b4dc6c158ae9c56d25eeccf5bc56d024"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.6.5"
   async:
     dependency: transitive
     description:
@@ -97,6 +89,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.2.1"
+  block_flutter:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: "v0.1.0"
+      resolved-ref: e423cc9149e36043d87fe1b966dba46162d22cec
+      url: "https://github.com/derek44554/block_flutter.git"
+    source: git
+    version: "0.1.0"
   boolean_selector:
     dependency: transitive
     description:

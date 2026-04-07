@@ -1,14 +1,10 @@
-import 'dart:convert';
-
-import 'package:flutter/foundation.dart';
-
 import 'package:block_app/state/connection_provider.dart';
-import 'package:block_app/core/network/crypto/bridge_transport.dart';
+import 'package:block_flutter/block_flutter.dart' as sdk;
 
 /// ApiClient handles all HTTP requests to the Block backend. All requests use the
 /// unified `/bridge/ins` route, even when the payload indicates different protocols or routings.
 ///
-/// Most requests share the same structure; the main difference lies in the contents of the `data` field.
+/// This is a thin adapter that delegates to the SDK's ApiClient.
 class ApiClient {
   ApiClient({required ConnectionProvider connectionProvider}) : _connectionProvider = connectionProvider;
 
@@ -29,18 +25,14 @@ class ApiClient {
     if (connection == null) {
       throw StateError('No active connection available. Cannot perform request.');
     }
-
-    final receiverField = receiverBid != null && receiverBid.isNotEmpty ? receiverBid : receiver;
-
-    final payload = <String, dynamic>{
-      'protocol': protocol,
-      'routing': routing,
-      'data': data,
-      'receiver': receiverField,
-      'wait': wait,
-      'timeout': timeout,
-    };
-
-    return BridgeTransport.post(connection: connection, payload: payload);
+    return sdk.ApiClient(connection: connection).postToBridge(
+      routing: routing,
+      data: data,
+      protocol: protocol,
+      receiver: receiver,
+      wait: wait,
+      timeout: timeout,
+      receiverBid: receiverBid,
+    );
   }
 }

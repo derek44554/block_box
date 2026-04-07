@@ -7,8 +7,6 @@ import '../../../core/models/block_model.dart';
 import '../../../core/storage/cache/image_cache.dart';
 import '../../../core/utils/formatters/bid_formatter.dart';
 import '../../../core/utils/formatters/file_size_formatter.dart';
-import '../../../features/photo/models/photo_models.dart';
-import '../../../features/photo/widgets/photo_viewer.dart';
 import '../../common/block_detail_page.dart';
 import '../../../state/connection_provider.dart';
 import '../../../utils/block_image_loader.dart';
@@ -221,20 +219,10 @@ class _ImageDetailPageState extends State<ImageDetailPage> with BlockDetailListe
   }
 
   void _openFullScreenViewer() {
-    final block = widget.block;
-    final heroTag = 'image_detail/${block.maybeString('bid') ?? UniqueKey()}';
-    final photo = PhotoImage(
-      block: block,
-      heroTag: heroTag,
-      title: block.maybeString('name') ?? '图片',
-      time: formatDate(_data.createdAt ?? DateTime.now()),
-      previewBytes: _imageResult?.bytes,
-      previewVariant: _imageResult?.variant,
-    );
-
+    if (_imageResult == null) return;
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => PhotoViewerPage(photos: [photo], initialIndex: 0),
+        builder: (_) => _FullScreenImagePage(imageResult: _imageResult!),
       ),
     );
   }
@@ -468,6 +456,31 @@ class _ImageDetailPageState extends State<ImageDetailPage> with BlockDetailListe
         bytesResolver: () async => bytes,
       ),
       source: ImageLoadSource.external,
+    );
+  }
+}
+
+/// 简单全屏图片查看页
+class _FullScreenImagePage extends StatelessWidget {
+  const _FullScreenImagePage({required this.imageResult});
+
+  final BlockImageResult imageResult;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: GestureDetector(
+        onTap: () => Navigator.of(context).pop(),
+        child: Center(
+          child: InteractiveViewer(
+            child: Image(
+              image: imageResult.provider,
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

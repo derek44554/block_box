@@ -15,11 +15,8 @@ import '../../features/collect/pages/collect_page.dart';
 import '../../features/home/pages/home_page.dart';
 import '../../features/home/pages/mac_home_page.dart';
 import '../../features/link/pages/link_page.dart';
-import '../../features/music/pages/music_page.dart';
-import '../../features/photo/pages/photo_page.dart';
 import '../../features/settings/pages/settings_page.dart';
 import '../../features/tag/pages/tag_page.dart';
-import '../../features/trace/pages/trace_page.dart';
 import '../storage/cache/image_cache.dart';
 import '../utils/helpers/platform_helper.dart';
 import 'route_names.dart';
@@ -48,9 +45,6 @@ class AppRouter {
     RouteNames.home: (context, settings) => HomePage(),
     RouteNames.aggregation: (context, settings) => const AggregationPage(),
     RouteNames.collect: (context, settings) => CollectPage(),
-    RouteNames.photo: (context, settings) => PhotoPage(),
-    RouteNames.music: (context, settings) => const MusicPage(),
-    RouteNames.trace: (context, settings) => const TracePage(),
     RouteNames.settings: (context, settings) => const SettingsPage(),
     RouteNames.tag: (context, settings) {
       final tag = settings.arguments as String? ?? '';

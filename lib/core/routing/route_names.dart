@@ -7,8 +7,5 @@ class RouteNames {
   static const String collect = '/collect';
   static const String tag = '/tag';
   static const String link = '/link';
-  static const String photo = '/photo';
-  static const String music = '/music';
-  static const String trace = '/trace';
   static const String settings = '/settings';
 }

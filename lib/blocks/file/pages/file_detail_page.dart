@@ -12,8 +12,8 @@ import '../../../state/connection_provider.dart';
 import '../../../utils/block_image_loader.dart';
 import '../../../utils/file_category.dart';
 import '../models/file_card_data.dart';
-import '../../../features/music/models/music_models.dart';
-import '../../../features/music/services/audio_player_service.dart';
+import '../models/audio_item.dart';
+import '../services/audio_player_service.dart';
 import '../../../state/block_detail_listener_mixin.dart';
 
 
@@ -35,7 +35,7 @@ class _FileDetailPageState extends State<FileDetailPage> with BlockDetailListene
   // 音频播放相关
   AudioPlayerService? _audioPlayer;
   bool _isAudioFile = false;
-  MusicItem? _musicItem;
+  AudioItem? _musicItem;
 
   @override
   String? get blockBid => widget.block.bid;
@@ -74,7 +74,7 @@ class _FileDetailPageState extends State<FileDetailPage> with BlockDetailListene
     if (_isAudioFile) {
       _audioPlayer = AudioPlayerService();
       _audioPlayer!.addListener(_onAudioStateChanged);
-      _musicItem = MusicItem.fromBlock(widget.block);
+      _musicItem = AudioItem.fromBlock(widget.block);
     }
   }
   

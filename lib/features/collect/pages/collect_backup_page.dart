@@ -5,12 +5,10 @@ import '../../../core/widgets/dialogs/app_dialog.dart';
 import '../providers/collect_provider.dart';
 import '../services/collect_backup_service.dart';
 import '../../aggregation/providers/aggregation_provider.dart';
-import '../../photo/providers/photo_provider.dart';
-import '../../music/providers/music_provider.dart';
 
 /// 应用数据备份页面
 ///
-/// 提供收藏、聚集、相册集合和音乐集合数据的统一导出和导入功能
+/// 提供收藏和聚集数据的统一导出和导入功能
 class CollectBackupPage extends StatefulWidget {
   const CollectBackupPage({super.key});
 
@@ -26,16 +24,11 @@ class _CollectBackupPageState extends State<CollectBackupPage> {
   Widget build(BuildContext context) {
     final collectProvider = context.watch<CollectProvider>();
     final aggregationProvider = context.watch<AggregationProvider>();
-    final photoProvider = context.watch<PhotoProvider>();
-    final musicProvider = context.watch<MusicProvider>();
 
     final hasCollectData =
         collectProvider.entries.isNotEmpty || collectProvider.tags.isNotEmpty;
     final hasAggregationData = aggregationProvider.items.isNotEmpty;
-    final hasPhotoData = photoProvider.collections.isNotEmpty;
-    final hasMusicData = musicProvider.collections.isNotEmpty;
-    final hasData =
-        hasCollectData || hasAggregationData || hasPhotoData || hasMusicData;
+    final hasData = hasCollectData || hasAggregationData;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -69,8 +62,6 @@ class _CollectBackupPageState extends State<CollectBackupPage> {
             _buildDataOverview(
               collectProvider,
               aggregationProvider,
-              photoProvider,
-              musicProvider,
             ),
             const SizedBox(height: 32),
 
@@ -100,8 +91,6 @@ class _CollectBackupPageState extends State<CollectBackupPage> {
   Widget _buildDataOverview(
     CollectProvider collectProvider,
     AggregationProvider aggregationProvider,
-    PhotoProvider photoProvider,
-    MusicProvider musicProvider,
   ) {
     final tagCount = collectProvider.tags.length;
     final entryCount = collectProvider.entries.length;
@@ -110,10 +99,6 @@ class _CollectBackupPageState extends State<CollectBackupPage> {
       (sum, entry) => sum + entry.items.length,
     );
     final aggregationItemCount = aggregationProvider.items.length;
-    final photoCollectionCount = photoProvider.collections.length;
-    final photoAlbumCount = photoProvider.albumCollections.length;
-    final musicCollectionCount = musicProvider.collections.length;
-    final musicPlaylistCount = musicProvider.playlistCollections.length;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -178,66 +163,6 @@ class _CollectBackupPageState extends State<CollectBackupPage> {
                 ),
               ),
               const Expanded(child: SizedBox()),
-              const Expanded(child: SizedBox()),
-            ],
-          ),
-          const SizedBox(height: 16),
-          // 相册数据
-          const Text(
-            '相册',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _buildDataStat(
-                  '集合',
-                  photoCollectionCount,
-                  Icons.collections_outlined,
-                ),
-              ),
-              Expanded(
-                child: _buildDataStat(
-                  '相册',
-                  photoAlbumCount,
-                  Icons.photo_album_outlined,
-                ),
-              ),
-              const Expanded(child: SizedBox()),
-            ],
-          ),
-          const SizedBox(height: 16),
-          // 音乐数据
-          const Text(
-            '音乐',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _buildDataStat(
-                  '集合',
-                  musicCollectionCount,
-                  Icons.library_music_outlined,
-                ),
-              ),
-              Expanded(
-                child: _buildDataStat(
-                  '播放列表',
-                  musicPlaylistCount,
-                  Icons.playlist_play,
-                ),
-              ),
               const Expanded(child: SizedBox()),
             ],
           ),
@@ -412,7 +337,7 @@ class _CollectBackupPageState extends State<CollectBackupPage> {
           const SizedBox(height: 12),
           _buildInstructionItem('导出功能可以选择保存路径，将应用数据保存为 JSON 文件'),
           _buildInstructionItem('导入时会自动合并数据，不会覆盖现有内容'),
-          _buildInstructionItem('备份文件包含收藏、聚集、相册和音乐的所有数据'),
+          _buildInstructionItem('备份文件包含收藏和聚集的所有数据'),
           _buildInstructionItem('备份文件可以在不同设备间传输，方便数据迁移'),
           _buildInstructionItem('建议定期备份重要数据'),
         ],
@@ -474,14 +399,10 @@ class _CollectBackupPageState extends State<CollectBackupPage> {
     try {
       final collectProvider = context.read<CollectProvider>();
       final aggregationProvider = context.read<AggregationProvider>();
-      final photoProvider = context.read<PhotoProvider>();
-      final musicProvider = context.read<MusicProvider>();
 
       final result = await CollectBackupService.exportAllDataWithDialog(
         collectProvider,
         aggregationProvider,
-        photoProvider,
-        musicProvider,
       );
 
       if (!mounted) return;
@@ -513,14 +434,10 @@ class _CollectBackupPageState extends State<CollectBackupPage> {
     try {
       final collectProvider = context.read<CollectProvider>();
       final aggregationProvider = context.read<AggregationProvider>();
-      final photoProvider = context.read<PhotoProvider>();
-      final musicProvider = context.read<MusicProvider>();
 
       final result = await CollectBackupService.importAllData(
         collectProvider,
         aggregationProvider,
-        photoProvider,
-        musicProvider,
       );
 
       if (!mounted) return;
@@ -541,10 +458,6 @@ class _CollectBackupPageState extends State<CollectBackupPage> {
             messages.add('• ${result.importedItems} 个条目');
           if (result.importedAggregationItems > 0)
             messages.add('• ${result.importedAggregationItems} 个聚集项');
-          if (result.importedPhotoCollections > 0)
-            messages.add('• ${result.importedPhotoCollections} 个相册集合');
-          if (result.importedMusicCollections > 0)
-            messages.add('• ${result.importedMusicCollections} 个音乐集合');
 
           _showSuccessDialog(
             title: '导入成功',

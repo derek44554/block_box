@@ -6,38 +6,28 @@ import '../models/collect_models.dart';
 import '../providers/collect_provider.dart';
 import '../../aggregation/models/aggregation_models.dart';
 import '../../aggregation/providers/aggregation_provider.dart';
-import '../../photo/models/photo_models.dart';
-import '../../photo/providers/photo_provider.dart';
-import '../../music/models/music_models.dart';
-import '../../music/providers/music_provider.dart';
 
-/// 收藏、聚集、相册和音乐数据备份服务
+/// 收藏和聚集数据备份服务
 ///
-/// 提供收藏、聚集、相册集合和音乐集合数据的统一导出和导入功能
+/// 提供收藏和聚集数据的统一导出和导入功能
 /// 
 /// 支持的数据类型：
 /// - 收藏数据：标签、分组、条目
 /// - 聚集数据：聚集项
-/// - 相册数据：相册集合（包括相册标记）
-/// - 音乐数据：音乐集合（包括播放列表标记）
 class CollectBackupService {
   static const String _backupVersion = '1.0.0';
   static const String _backupFileExtension = 'json';
   static const String _defaultFileName = 'app_backup';
 
-  /// 导出收藏、聚集、相册和音乐数据到用户选择的路径
+  /// 导出收藏和聚集数据到用户选择的路径
   ///
   /// [collectProvider] 收藏数据提供者
   /// [aggregationProvider] 聚集数据提供者
-  /// [photoProvider] 相册数据提供者
-  /// [musicProvider] 音乐数据提供者
   /// [includeSelection] 是否包含当前选择状态
   /// 返回导出结果信息
   static Future<ExportResult> exportAllDataWithDialog(
     CollectProvider collectProvider,
-    AggregationProvider aggregationProvider,
-    PhotoProvider photoProvider,
-    MusicProvider musicProvider, {
+    AggregationProvider aggregationProvider, {
     bool includeSelection = false,
   }) async {
     try {
@@ -45,8 +35,6 @@ class CollectBackupService {
       final backupData = _createBackupData(
         collectProvider,
         aggregationProvider,
-        photoProvider,
-        musicProvider,
         includeSelection,
       );
       
@@ -117,19 +105,15 @@ class CollectBackupService {
     }
   }
 
-  /// 导入收藏、聚集、相册和音乐数据
+  /// 导入收藏和聚集数据
   ///
   /// [collectProvider] 收藏数据提供者
   /// [aggregationProvider] 聚集数据提供者
-  /// [photoProvider] 相册数据提供者
-  /// [musicProvider] 音乐数据提供者
   /// [mergeMode] 导入模式：true为合并，false为覆盖
   /// 返回导入结果信息
   static Future<ImportResult> importAllData(
     CollectProvider collectProvider,
-    AggregationProvider aggregationProvider,
-    PhotoProvider photoProvider,
-    MusicProvider musicProvider, {
+    AggregationProvider aggregationProvider, {
     bool mergeMode = true,
   }) async {
     try {
@@ -154,8 +138,6 @@ class CollectBackupService {
       return await _importBackupData(
         collectProvider,
         aggregationProvider,
-        photoProvider,
-        musicProvider,
         backupData,
         mergeMode,
       );
@@ -164,19 +146,15 @@ class CollectBackupService {
     }
   }
 
-  /// 从文件路径导入收藏、聚集、相册和音乐数据
+  /// 从文件路径导入收藏和聚集数据
   ///
   /// [collectProvider] 收藏数据提供者
   /// [aggregationProvider] 聚集数据提供者
-  /// [photoProvider] 相册数据提供者
-  /// [musicProvider] 音乐数据提供者
   /// [filePath] 备份文件路径
   /// [mergeMode] 导入模式：true为合并，false为覆盖
   static Future<ImportResult> importFromFile(
     CollectProvider collectProvider,
     AggregationProvider aggregationProvider,
-    PhotoProvider photoProvider,
-    MusicProvider musicProvider,
     String filePath, {
     bool mergeMode = true,
   }) async {
@@ -192,8 +170,6 @@ class CollectBackupService {
       return await _importBackupData(
         collectProvider,
         aggregationProvider,
-        photoProvider,
-        musicProvider,
         backupData,
         mergeMode,
       );
@@ -206,8 +182,6 @@ class CollectBackupService {
   static Map<String, dynamic> _createBackupData(
     CollectProvider collectProvider,
     AggregationProvider aggregationProvider,
-    PhotoProvider photoProvider,
-    MusicProvider musicProvider,
     bool includeSelection,
   ) {
     final data = <String, dynamic>{
@@ -227,18 +201,6 @@ class CollectBackupService {
             .map((item) => item.toJson())
             .toList(),
         'gridLayoutItemIds': aggregationProvider.gridLayoutItemIds.toList(),
-      },
-      // 相册集合数据
-      'photo': {
-        'collections': photoProvider.collections
-            .map((collection) => collection.toJson())
-            .toList(),
-      },
-      // 音乐集合数据
-      'music': {
-        'collections': musicProvider.collections
-            .map((collection) => collection.toJson())
-            .toList(),
       },
     };
 
@@ -266,8 +228,6 @@ class CollectBackupService {
   static Future<ImportResult> _importBackupData(
     CollectProvider collectProvider,
     AggregationProvider aggregationProvider,
-    PhotoProvider photoProvider,
-    MusicProvider musicProvider,
     Map<String, dynamic> backupData,
     bool mergeMode,
   ) async {
@@ -283,8 +243,6 @@ class CollectBackupService {
       var importedEntries = 0;
       var importedItems = 0;
       var importedAggregationItems = 0;
-      var importedPhotoCollections = 0;
-      var importedMusicCollections = 0;
 
       // 处理收藏数据
       final collectData = backupData['collect'] as Map<String, dynamic>?;
@@ -420,65 +378,13 @@ class CollectBackupService {
         }
       }
 
-      // 处理相册集合数据
-      final photoData = backupData['photo'] as Map<String, dynamic>?;
-      if (photoData != null) {
-        final collections =
-            (photoData['collections'] as List<dynamic>?)
-                ?.map(
-                  (item) =>
-                      PhotoCollection.fromJson(item as Map<String, dynamic>),
-                )
-                .toList() ??
-            <PhotoCollection>[];
-
-        if (mergeMode) {
-          // 合并模式：添加不存在的集合
-          final existingBids = photoProvider.collections
-              .map((c) => c.bid)
-              .toSet();
-          for (final collection in collections) {
-            if (!existingBids.contains(collection.bid)) {
-              await photoProvider.addCollection(collection);
-              importedPhotoCollections++;
-            }
-          }
-        }
-      }
-
-      // 处理音乐集合数据
-      final musicData = backupData['music'] as Map<String, dynamic>?;
-      if (musicData != null) {
-        final collections =
-            (musicData['collections'] as List<dynamic>?)
-                ?.map(
-                  (item) =>
-                      MusicCollection.fromJson(item as Map<String, dynamic>),
-                )
-                .toList() ??
-            <MusicCollection>[];
-
-        if (mergeMode) {
-          // 合并模式：添加不存在的集合
-          final existingBids = musicProvider.collections
-              .map((c) => c.bid)
-              .toSet();
-          for (final collection in collections) {
-            if (!existingBids.contains(collection.bid)) {
-              await musicProvider.addCollection(collection);
-              importedMusicCollections++;
-            }
-          }
-        }
-      }
+      // 处理相册集合数据（已移除相册功能，跳过）
 
       return ImportResult.success(
         importedTags: importedTags,
         importedEntries: importedEntries,
         importedItems: importedItems,
         importedAggregationItems: importedAggregationItems,
-        importedPhotoCollections: importedPhotoCollections,
-        importedMusicCollections: importedMusicCollections,
       );
     } catch (error) {
       return ImportResult.error('处理备份数据失败：${error.toString()}');
@@ -542,8 +448,6 @@ class ImportResult {
     this.importedEntries = 0,
     this.importedItems = 0,
     this.importedAggregationItems = 0,
-    this.importedPhotoCollections = 0,
-    this.importedMusicCollections = 0,
     this.cancelled = false,
   });
 
@@ -552,8 +456,6 @@ class ImportResult {
     int importedEntries = 0,
     int importedItems = 0,
     int importedAggregationItems = 0,
-    int importedPhotoCollections = 0,
-    int importedMusicCollections = 0,
   }) {
     return ImportResult._(
       success: true,
@@ -561,8 +463,6 @@ class ImportResult {
       importedEntries: importedEntries,
       importedItems: importedItems,
       importedAggregationItems: importedAggregationItems,
-      importedPhotoCollections: importedPhotoCollections,
-      importedMusicCollections: importedMusicCollections,
     );
   }
 
@@ -580,17 +480,13 @@ class ImportResult {
   final int importedEntries;
   final int importedItems;
   final int importedAggregationItems;
-  final int importedPhotoCollections;
-  final int importedMusicCollections;
   final bool cancelled;
 
   bool get hasImportedData =>
       importedTags > 0 ||
       importedEntries > 0 ||
       importedItems > 0 ||
-      importedAggregationItems > 0 ||
-      importedPhotoCollections > 0 ||
-      importedMusicCollections > 0;
+      importedAggregationItems > 0;
 }
 
 /// 导出结果

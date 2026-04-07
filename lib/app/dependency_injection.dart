@@ -15,8 +15,6 @@ import '../features/aggregation/providers/aggregation_provider.dart';
 import '../state/connection_provider.dart';
 import '../state/block_provider.dart';
 import '../features/collect/providers/collect_provider.dart';
-import '../features/photo/providers/photo_provider.dart';
-import '../features/music/providers/music_provider.dart';
 
 /// 依赖注入配置
 /// 
@@ -58,8 +56,6 @@ class DependencyInjection {
       ChangeNotifierProvider(create: (_) => BlockProvider()),
       ChangeNotifierProvider(create: (_) => AggregationProvider()),
       ChangeNotifierProvider(create: (_) => CollectProvider()),
-      ChangeNotifierProvider(create: (_) => PhotoProvider()),
-      ChangeNotifierProvider(create: (_) => MusicProvider()),
     ];
   }
 }

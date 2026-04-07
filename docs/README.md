@@ -104,7 +104,6 @@ lib/
 │   ├── settings/         # 设置
 │   ├── link/             # 链接功能
 │   ├── tag/              # 标签功能
-│   ├── trace/            # 追踪功能
 │   └── ...               # 其他功能模块
 │
 ├── blocks/                # Block 类型处理
@@ -194,9 +193,9 @@ lib/
 
 ### 数据备份与恢复
 
-应用提供了统一的数据备份和恢复功能，支持导出和导入收藏、聚集、相册和音乐的所有数据。
+应用提供了统一的数据备份和恢复功能，支持导出和导入收藏、聚集和相册的所有数据。
 
-- **备份范围**：包含收藏标签与条目、聚集项目、相册集合、音乐集合的完整数据
+- **备份范围**：包含收藏标签与条目、聚集项目、相册集合的完整数据（不含音乐集合）
 - **导出功能**：通过 `CollectBackupService.exportAllDataWithDialog()` 将数据导出为 JSON 格式文件
   - 用户可通过目录选择对话框自主选择保存位置
   - 文件名格式：`app_backup_<时间戳>.json`
@@ -217,6 +216,15 @@ lib/
 - 新增集合弹窗通过 `_PhotoCollectionDialog` 实现，输入标题、简介与 BID 并保存。
 - 持久化逻辑保存在 `lib/pages/photo/photo_page.dart`，使用 `shared_preferences` 维护 `photo_collections`。
 - 默认集合样例仍由 `_buildCollections()` 提供，首次运行若无数据将写入样例。
+
+### 音频播放服务（Block 级别）
+
+`lib/blocks/file/services/audio_player_service.dart` 提供了 Block 级别的音频播放能力，与 `features/music` 中的全局音乐播放器相互独立。
+
+- **类**：`AudioPlayerService extends ChangeNotifier`，可通过 `Provider` 注入
+- **播放流程**：优先从 `AudioCacheHelper` 读取本地缓存，缓存未命中时通过 `IpfsFileHelper` 构建 URL 下载并缓存后再播放
+- **状态暴露**：`currentMusic`（当前 `AudioItem`）、`isPlaying`（播放状态）
+- **主要方法**：`play(AudioItem, endpoint)`、`pause()`、`resume()`
 
 ### 图片处理核心
 
@@ -283,15 +291,19 @@ lib/
 
 ### 加密与 API
 
-- `lib/network/crypto_util.dart`：封装 AES-CBC PKCS7 的加密/解密工具，会使用随机 IV 并将 `iv + ciphertext` 一并编码为 Base64。
-- `lib/network/api_client.dart`：读取 `ConnectionProvider.activeConnection` 的地址与 Base64 密钥，对载荷进行加密后 POST 到 `/bridge/ins`。
-- `lib/network/block_api.dart`：针对区块相关指令的高层 API，例如 `getBlock` 自动拼装 `routing` 与 `data`。
+- `block_flutter/lib/src/crypto/crypto_util.dart`：封装 AES-CBC PKCS7 的加密/解密工具，会使用随机 IV 并将 `iv + ciphertext` 一并编码为 Base64。由 `block_flutter` SDK 提供，通过 `lib/core/network/crypto/` 中的文件重新导出。
+- `block_flutter/lib/src/network/api_client.dart`：接收 `ConnectionModel` 实例，对载荷进行加密后 POST 到 `/bridge/ins`。
+- `block_flutter/lib/src/network/block_api.dart`：针对区块相关指令的高层 API，例如 `getBlock` 自动拼装 `routing` 与 `data`。
+- `lib/core/network/api/api_client.dart`：适配层，从 `ConnectionProvider` 获取活跃连接后委托给 SDK `ApiClient`。
+- `lib/core/network/api/block_api.dart`：适配层，委托给 SDK `BlockApi`，并在 `saveBlock` 后额外调用 `RecentBlocksManager`。
+- `lib/core/network/api/node_api.dart`：适配层，委托给 SDK `NodeApi`。
 
 ### Block API 示例
 
 **示例：获取指定 BID 的区块**
 
 ```dart
+// 主项目中通过 ConnectionProvider 注入，无需手动获取 ConnectionModel
 final blockApi = BlockApi(connectionProvider: context.read<ConnectionProvider>());
 final response = await blockApi.getBlock(bid: '5dd37da985bc497f5578ac00371911dc');
 ```

@@ -1,17 +1,15 @@
 import 'package:block_app/state/connection_provider.dart';
-import 'package:block_app/core/network/api/api_client.dart';
+import 'package:block_flutter/block_flutter.dart' as sdk;
 
 class NodeApi {
-  NodeApi({required ConnectionProvider connectionProvider})
-      : _client = ApiClient(connectionProvider: connectionProvider);
-
-  final ApiClient _client;
+  NodeApi({required ConnectionProvider connectionProvider}) : _connectionProvider = connectionProvider;
+  final ConnectionProvider _connectionProvider;
 
   Future<Map<String, dynamic>> getSignature() {
-    return _client.postToBridge(
-      protocol: 'open',
-      routing: '/node/signature',
-      data: const {},
-    );
+    final connection = _connectionProvider.activeConnection;
+    if (connection == null) {
+      throw StateError('No active connection available. Cannot perform request.');
+    }
+    return sdk.NodeApi(connection: connection).getSignature();
   }
 }

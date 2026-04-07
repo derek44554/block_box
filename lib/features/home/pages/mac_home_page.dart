@@ -17,13 +17,10 @@ import '../../../core/network/api/block_api.dart';
 import '../../../state/connection_provider.dart';
 import '../../aggregation/pages/aggregation_page.dart';
 import '../../collect/pages/collect_page.dart';
-import '../../music/pages/music_page.dart';
-import '../../photo/pages/photo_page.dart';
-import '../../trace/pages/trace_page.dart';
 import '../widgets/home_header.dart';
 import '../widgets/mac_menu_button.dart';
 
-enum MacHomeSection { overview, aggregation, photo, music, collect, trace }
+enum MacHomeSection { overview, aggregation, collect }
 
 class MacHomePage extends StatefulWidget {
   const MacHomePage({super.key});
@@ -60,33 +57,6 @@ class _MacHomePageState extends State<MacHomePage> {
       icon: Icons.dashboard_outlined,
       accentColor: Color(0xFF81C784),
       routeName: RouteNames.aggregation,
-    ),
-    _MacMenuItem(
-      section: MacHomeSection.photo,
-      label: '相册',
-      description: '浏览照片资源，支持拖拽、预览与集合管理。',
-      highlights: ['四列瀑布流', '快捷筛选', '全屏预览'],
-      icon: Icons.photo_album_outlined,
-      accentColor: Color(0xFFFFB74D),
-      routeName: RouteNames.photo,
-    ),
-    _MacMenuItem(
-      section: MacHomeSection.music,
-      label: '音乐',
-      description: '播放和管理音乐集合，支持播放列表与集合管理。',
-      highlights: ['音乐播放', '播放列表', '集合管理'],
-      icon: Icons.music_note_outlined,
-      accentColor: Color(0xFFFF6B9D),
-      routeName: RouteNames.music,
-    ),
-    _MacMenuItem(
-      section: MacHomeSection.trace,
-      label: '痕迹',
-      description: '记录和追踪操作痕迹，便于管理和回溯。',
-      highlights: ['操作记录', '痕迹追踪', '数据管理'],
-      icon: Icons.timeline,
-      accentColor: Color(0xFF9C27B0),
-      routeName: RouteNames.trace,
     ),
   ];
 
@@ -438,14 +408,8 @@ class _MacHomePageState extends State<MacHomePage> {
       switch (section) {
         case MacHomeSection.aggregation:
           return const AggregationPage();
-        case MacHomeSection.photo:
-          return const PhotoPage();
-        case MacHomeSection.music:
-          return const MusicPage();
         case MacHomeSection.collect:
           return const CollectPage();
-        case MacHomeSection.trace:
-          return const TracePage();
         case MacHomeSection.overview:
           return const SizedBox.shrink();
       }
