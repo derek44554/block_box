@@ -91,7 +91,6 @@ class FileUploadService {
       'name': '',
       'intro': '',
       'ipfs': <String, dynamic>{},
-      'node_bid': blockNodeBid,
     };
 
     // 使用与 file_edit_page 相同的方式构建最终数据
@@ -100,9 +99,13 @@ class FileUploadService {
       ..['intro'] = ''
       ..['ipfs'] = ipfsData
       ..['bid'] = generateBidV2(blockNodeBid)
-      ..['node_bid'] = blockNodeBid
       ..['model'] = _fileModelId
       ..['link'] = linkBid != null ? [linkBid] : <String>[]; // 只在 linkBid 不为 null 时添加
+
+    // 创建文件时，节点信息仅用于路由与生成bid，不写入block数据
+    blockData.remove('node_bid');
+    blockData.remove('node_name');
+    blockData.remove('node_connection_address');
 
     if (fileInfo.timestamp != null) {
       blockData['add_time'] = iso8601WithOffset(fileInfo.timestamp!);

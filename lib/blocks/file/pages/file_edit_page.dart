@@ -1050,8 +1050,12 @@ class _FileEditPageState extends State<FileEditPage> with BlockEditMixin {
         ..['intro'] = _introController.text.trim()
         ..['ipfs'] = ipfsData
         ..['bid'] = generateBidV2(blockNodeBid)
-        ..['node_bid'] = blockNodeBid
         ..['model'] = _fileModelId;
+
+      // 创建文件时，节点信息仅用于路由与生成bid，不写入block数据
+      blockData.remove('node_bid');
+      blockData.remove('node_name');
+      blockData.remove('node_connection_address');
 
       if (_fileTimestamp != null) {
         blockData['add_time'] = iso8601WithOffset(_fileTimestamp!);

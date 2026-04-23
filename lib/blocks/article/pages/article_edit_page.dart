@@ -839,8 +839,12 @@ class _ArticleEditPageState extends State<ArticleEditPage> with BlockEditMixin {
         ..['cover'] = _coverController.text.trim()
         ..['ipfs'] = ipfsData
         ..['bid'] = generateBidV2(blockNodeBid)
-        ..['node_bid'] = blockNodeBid
         ..['model'] = _articleModelId;
+
+      // 创建文章时，节点信息仅用于路由与生成bid，不写入block数据
+      blockData.remove('node_bid');
+      blockData.remove('node_name');
+      blockData.remove('node_connection_address');
 
       // 只有创建时才设置 add_time
       if (_addTime != null) {
