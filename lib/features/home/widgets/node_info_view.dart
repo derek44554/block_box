@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:block_app/core/network/models/connection_model.dart';
 import '../../../../../state/connection_provider.dart';
 import '../pages/connection_status_page.dart';
+import '../pages/module_settings_page.dart';
 import 'node_hero_status.dart';
 import 'placeholder_message.dart';
 import 'section_card.dart';
@@ -49,11 +50,15 @@ class _NodeInfoViewState extends State<NodeInfoView> {
     final provider = context.watch<ConnectionProvider>();
     final connection = provider.activeConnection;
     final nodeData = connection?.nodeData ?? const <String, dynamic>{};
-    final data = nodeData['data'] as Map<String, dynamic>? ?? const <String, dynamic>{};
-    final signatureData = connection?.signatureData ?? const <String, dynamic>{};
-    
+    final data =
+        nodeData['data'] as Map<String, dynamic>? ?? const <String, dynamic>{};
+    final signatureData =
+        connection?.signatureData ?? const <String, dynamic>{};
+
     // 签名信息在 signatureData['data'] 中
-    final signatureInfo = signatureData['data'] as Map<String, dynamic>? ?? const <String, dynamic>{};
+    final signatureInfo =
+        signatureData['data'] as Map<String, dynamic>? ??
+        const <String, dynamic>{};
 
     if (connection == null) {
       return const PlaceholderMessage(text: '暂无连接，请先添加连接');
@@ -72,6 +77,8 @@ class _NodeInfoViewState extends State<NodeInfoView> {
           NodeHeroStatus(connection: connection),
           const SizedBox(height: 16),
           _buildConnectionStatusButton(context),
+          const SizedBox(height: 12),
+          _buildModuleSettingsButton(context),
           const SizedBox(height: 28),
           SectionCard(
             title: '节点详情',
@@ -83,13 +90,12 @@ class _NodeInfoViewState extends State<NodeInfoView> {
                     : '未提供',
               ),
               if (data['intro'] != null && (data['intro'] as String).isNotEmpty)
-                InfoItem(
-                  label: '节点介绍',
-                  value: data['intro'] as String,
-                ),
+                InfoItem(label: '节点介绍', value: data['intro'] as String),
               InfoItem(
                 label: 'IPFS 接口',
-                value: (data['ipfs_api'] as String?)?.isNotEmpty == true ? data['ipfs_api'] as String : '未提供',
+                value: (data['ipfs_api'] as String?)?.isNotEmpty == true
+                    ? data['ipfs_api'] as String
+                    : '未提供',
               ),
               InfoItem(
                 label: '转发桥',
@@ -132,14 +138,39 @@ class _NodeInfoViewState extends State<NodeInfoView> {
   }
 
   Widget _buildConnectionStatusButton(BuildContext context) {
-    return InkWell(
+    return _buildNavigationButton(
+      title: '节点状态',
+      icon: Icons.hub_outlined,
+      color: Colors.blue,
       onTap: () {
         Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => const ConnectionStatusPage(),
-          ),
+          MaterialPageRoute(builder: (context) => const ConnectionStatusPage()),
         );
       },
+    );
+  }
+
+  Widget _buildModuleSettingsButton(BuildContext context) {
+    return _buildNavigationButton(
+      title: '模块设置',
+      icon: Icons.extension_outlined,
+      color: Colors.teal,
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => const ModuleSettingsPage()),
+        );
+      },
+    );
+  }
+
+  Widget _buildNavigationButton({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
@@ -147,19 +178,19 @@ class _NodeInfoViewState extends State<NodeInfoView> {
           gradient: LinearGradient(
             colors: [
               const Color(0xFF1A1A1A),
-              const Color(0xFF1A1A1A).withOpacity(0.8),
+              const Color(0xFF1A1A1A).withValues(alpha: 0.8),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -170,20 +201,16 @@ class _NodeInfoViewState extends State<NodeInfoView> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.15),
+                color: color.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(
-                Icons.hub_outlined,
-                size: 20,
-                color: Colors.blue,
-              ),
+              child: Icon(icon, size: 20, color: color),
             ),
             const SizedBox(width: 14),
-            const Expanded(
+            Expanded(
               child: Text(
-                '节点状态',
-                style: TextStyle(
+                title,
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                   color: Colors.white,
@@ -194,7 +221,7 @@ class _NodeInfoViewState extends State<NodeInfoView> {
             Icon(
               Icons.arrow_forward_ios,
               size: 14,
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
             ),
           ],
         ),
