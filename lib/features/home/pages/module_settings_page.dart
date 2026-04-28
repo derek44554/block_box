@@ -17,6 +17,7 @@ class _ModuleSettingsPageState extends State<ModuleSettingsPage> {
   bool _isLoading = false;
   String? _errorMessage;
   List<_LocalModule> _modules = const [];
+  final Set<String> _updatingModuleNames = <String>{};
 
   @override
   void initState() {
@@ -90,12 +91,7 @@ class _ModuleSettingsPageState extends State<ModuleSettingsPage> {
   }
 
   List<_LocalModule> _parseModules(Map<String, dynamic> response) {
-    final data = response['data'];
-    final rawItems = switch (data) {
-      {'items': final List<dynamic> items} => items,
-      final List<dynamic> items => items,
-      _ => const <dynamic>[],
-    };
+    final rawItems = _extractModuleItems(response);
 
     return rawItems
         .whereType<Map>()
@@ -103,9 +99,110 @@ class _ModuleSettingsPageState extends State<ModuleSettingsPage> {
         .toList();
   }
 
+  List<dynamic> _extractModuleItems(Object? source) {
+    if (source is List) {
+      return source;
+    }
+
+    if (source is Map) {
+      for (final key in const [
+        'data',
+        'items',
+        'apps',
+        'modules',
+        'list',
+        'v',
+      ]) {
+        if (!source.containsKey(key)) continue;
+        final items = _extractModuleItems(source[key]);
+        if (items.isNotEmpty) {
+          return items;
+        }
+      }
+
+      final values = source.values.toList();
+      if (values.isNotEmpty && values.every((value) => value is Map)) {
+        return source.entries.map((entry) {
+          final item = Map<String, dynamic>.from(entry.value as Map);
+          item.putIfAbsent('name', () => entry.key.toString());
+          return item;
+        }).toList();
+      }
+    }
+
+    return const <dynamic>[];
+  }
+
+  Future<void> _setModuleEnabled(_LocalModule module, bool enabled) async {
+    final name = module.name.trim();
+    if (name.isEmpty || name == '未命名模块') {
+      _showMessage('模块名称无效，无法操作');
+      return;
+    }
+
+    if (module.isProtectedCoreModule) {
+      _showMessage('apps 模块为核心模块，禁止操作');
+      return;
+    }
+
+    if (_updatingModuleNames.contains(name)) {
+      return;
+    }
+
+    final provider = context.read<ConnectionProvider>();
+    final route = enabled ? '/apps/apps/enable' : '/apps/apps/disable';
+
+    setState(() {
+      _updatingModuleNames.add(name);
+    });
+
+    try {
+      debugPrint('=== 开始${enabled ? '开启' : '关闭'}模块 ===');
+      debugPrint('请求路由: $route');
+      debugPrint('模块名称: $name');
+
+      final api = ApiClient(connectionProvider: provider);
+      final response = await api.postToBridge(
+        routing: route,
+        data: {'name': name},
+      );
+
+      _printRouteResponse(route, response);
+
+      if (!mounted) return;
+      setState(() {
+        _modules = _modules
+            .map(
+              (item) =>
+                  item.name == name ? item.copyWith(enabled: enabled) : item,
+            )
+            .toList();
+      });
+      _showMessage(enabled ? '模块已开启' : '模块已关闭');
+
+      await _fetchModuleInfo();
+    } catch (error, stackTrace) {
+      debugPrint('${enabled ? '开启' : '关闭'}模块失败: $error');
+      debugPrint('堆栈跟踪: $stackTrace');
+      if (!mounted) return;
+      _showMessage('${enabled ? '开启' : '关闭'}模块失败: $error');
+    } finally {
+      debugPrint('=== ${enabled ? '开启' : '关闭'}模块结束 ===');
+      if (mounted) {
+        setState(() {
+          _updatingModuleNames.remove(name);
+        });
+      }
+    }
+  }
+
   void _printModuleInfo(Map<String, dynamic> response) {
+    _printRouteResponse('/apps/apps/all', response);
+  }
+
+  void _printRouteResponse(String route, Map<String, dynamic> response) {
     final prettyJson = const JsonEncoder.withIndent('  ').convert(response);
-    debugPrint('模块设置响应 /apps/apps/all:');
+    debugPrint('模块设置响应 $route:');
 
     const chunkSize = 900;
     for (var start = 0; start < prettyJson.length; start += chunkSize) {
@@ -115,6 +212,13 @@ class _ModuleSettingsPageState extends State<ModuleSettingsPage> {
       }
       debugPrint(prettyJson.substring(start, end));
     }
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -161,7 +265,16 @@ class _ModuleSettingsPageState extends State<ModuleSettingsPage> {
     return ListView.separated(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
-      itemBuilder: (context, index) => _ModuleCard(module: _modules[index]),
+      itemBuilder: (context, index) {
+        final module = _modules[index];
+        return _ModuleCard(
+          module: module,
+          isUpdating: _updatingModuleNames.contains(module.name),
+          onEnabledChanged: module.isProtectedCoreModule
+              ? null
+              : (enabled) => _setModuleEnabled(module, enabled),
+        );
+      },
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemCount: _modules.length,
     );
@@ -181,26 +294,160 @@ class _LocalModule {
   final bool enabled;
   final String? github;
 
+  bool get isProtectedCoreModule => name.trim().toLowerCase() == 'apps';
+
   factory _LocalModule.fromJson(Map<String, dynamic> json) {
     return _LocalModule(
-      name: (json['name'] as String?)?.trim().isNotEmpty == true
-          ? (json['name'] as String).trim()
-          : '未命名模块',
+      name:
+          _readText(json, const ['name', 'app_name', 'module', 'id']) ??
+          '未命名模块',
       version: (json['version'] as String?)?.trim(),
-      enabled: json['enabled'] == true,
+      enabled: _readEnabled(json),
       github: (json['github'] as String?)?.trim(),
     );
+  }
+
+  _LocalModule copyWith({bool? enabled}) {
+    return _LocalModule(
+      name: name,
+      version: version,
+      enabled: enabled ?? this.enabled,
+      github: github,
+    );
+  }
+
+  static String? _readText(Map<String, dynamic> json, List<String> keys) {
+    for (final key in keys) {
+      final value = json[key];
+      if (value is String && value.trim().isNotEmpty) {
+        return value.trim();
+      }
+    }
+    return null;
+  }
+
+  static bool _readEnabled(Map<String, dynamic> json) {
+    final enabledValue = _firstValue(json, const [
+      'enabled',
+      'enable',
+      'is_enabled',
+      'active',
+      'is_active',
+    ]);
+    final parsedEnabled = _parseBool(enabledValue);
+    if (parsedEnabled != null) {
+      return parsedEnabled;
+    }
+
+    final disabledValue = _firstValue(json, const [
+      'disabled',
+      'disable',
+      'is_disabled',
+      'is_disable',
+      'closed',
+    ]);
+    final parsedDisabled = _parseBool(disabledValue);
+    if (parsedDisabled != null) {
+      return !parsedDisabled;
+    }
+
+    final status = _readText(json, const ['status', 'state'])?.toLowerCase();
+    if (status != null) {
+      if (const [
+        'disabled',
+        'disable',
+        'off',
+        'closed',
+        'inactive',
+        'stopped',
+      ].contains(status)) {
+        return false;
+      }
+      if (const [
+        'enabled',
+        'enable',
+        'on',
+        'open',
+        'active',
+        'running',
+      ].contains(status)) {
+        return true;
+      }
+    }
+
+    return true;
+  }
+
+  static Object? _firstValue(Map<String, dynamic> json, List<String> keys) {
+    for (final key in keys) {
+      if (json.containsKey(key)) {
+        return json[key];
+      }
+    }
+    return null;
+  }
+
+  static bool? _parseBool(Object? value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (const [
+        'true',
+        '1',
+        'yes',
+        'y',
+        'enabled',
+        'enable',
+        'on',
+        'open',
+        'active',
+        'running',
+      ].contains(normalized)) {
+        return true;
+      }
+      if (const [
+        'false',
+        '0',
+        'no',
+        'n',
+        'disabled',
+        'disable',
+        'off',
+        'closed',
+        'inactive',
+        'stopped',
+      ].contains(normalized)) {
+        return false;
+      }
+    }
+    return null;
   }
 }
 
 class _ModuleCard extends StatelessWidget {
-  const _ModuleCard({required this.module});
+  const _ModuleCard({
+    required this.module,
+    required this.isUpdating,
+    required this.onEnabledChanged,
+  });
 
   final _LocalModule module;
+  final bool isUpdating;
+  final ValueChanged<bool>? onEnabledChanged;
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = module.enabled ? Colors.greenAccent : Colors.white38;
+    final statusColor = module.isProtectedCoreModule
+        ? Colors.amberAccent
+        : module.enabled
+        ? Colors.greenAccent
+        : Colors.white38;
+    final statusLabel = module.isProtectedCoreModule
+        ? '核心模块'
+        : module.enabled
+        ? '已启用'
+        : '已关闭';
     final version = module.version?.isNotEmpty == true
         ? module.version!
         : '未提供';
@@ -244,9 +491,31 @@ class _ModuleCard extends StatelessWidget {
                   ),
                 ),
               ),
-              _StatusBadge(
-                color: statusColor,
-                label: module.enabled ? '已启用' : '已关闭',
+              _StatusBadge(color: statusColor, label: statusLabel),
+              const SizedBox(width: 10),
+              SizedBox(
+                width: 52,
+                height: 32,
+                child: isUpdating
+                    ? const Center(
+                        child: SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : Switch(
+                        value: module.enabled,
+                        onChanged: onEnabledChanged,
+                        activeThumbColor: Colors.greenAccent,
+                        activeTrackColor: Colors.greenAccent.withValues(
+                          alpha: 0.28,
+                        ),
+                        inactiveThumbColor: Colors.white70,
+                        inactiveTrackColor: Colors.white.withValues(
+                          alpha: 0.16,
+                        ),
+                      ),
               ),
             ],
           ),
