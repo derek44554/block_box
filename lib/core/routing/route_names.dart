@@ -3,6 +3,7 @@ class RouteNames {
   RouteNames._();
 
   static const String home = '/';
+  static const String browse = '/browse';
   static const String aggregation = '/aggregation';
   static const String collect = '/collect';
   static const String tag = '/tag';

@@ -11,6 +11,7 @@ import '../../blocks/file/utils/file_category.dart';
 import '../../blocks/file/pages/video_detail_page.dart';
 import '../../blocks/file/pages/file_detail_page.dart';
 import '../../features/aggregation/pages/aggregation_page.dart';
+import '../../features/browse/pages/browse_page.dart';
 import '../../features/collect/pages/collect_page.dart';
 import '../../features/home/pages/home_page.dart';
 import '../../features/home/pages/mac_home_page.dart';
@@ -43,6 +44,7 @@ class AppRouter {
 
   static final Map<String, RouteWidgetBuilder> _routes = {
     RouteNames.home: (context, settings) => HomePage(),
+    RouteNames.browse: (context, settings) => const BrowsePage(),
     RouteNames.aggregation: (context, settings) => const AggregationPage(),
     RouteNames.collect: (context, settings) => CollectPage(),
     RouteNames.settings: (context, settings) => const SettingsPage(),

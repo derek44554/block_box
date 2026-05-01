@@ -143,6 +143,12 @@ class _HomePageState extends State<HomePage> {
                     runSpacing: 16,
                     children: [
                       _FeatureButton(
+                        icon: Icons.explore_outlined,
+                        label: '浏览',
+                        onTap: () =>
+                            Navigator.of(context).pushNamed(RouteNames.browse),
+                      ),
+                      _FeatureButton(
                         icon: Icons.star_border_rounded,
                         label: '收藏管理',
                         onTap: () =>
@@ -152,7 +158,8 @@ class _HomePageState extends State<HomePage> {
                         icon: Icons.dashboard_outlined,
                         label: '聚集',
                         onTap: () =>
-                            Navigator.of(context).pushNamed(RouteNames.aggregation),
+                            Navigator.of(context)
+                                .pushNamed(RouteNames.aggregation),
                       ),
                       _FeatureButton(
                         icon: Icons.add_circle_outline,

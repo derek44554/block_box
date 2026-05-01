@@ -16,11 +16,12 @@ import '../../../core/models/block_model.dart';
 import '../../../core/network/api/block_api.dart';
 import '../../../state/connection_provider.dart';
 import '../../aggregation/pages/aggregation_page.dart';
+import '../../browse/pages/browse_page.dart';
 import '../../collect/pages/collect_page.dart';
 import '../widgets/home_header.dart';
 import '../widgets/mac_menu_button.dart';
 
-enum MacHomeSection { overview, aggregation, collect }
+enum MacHomeSection { overview, browse, aggregation, collect }
 
 class MacHomePage extends StatefulWidget {
   const MacHomePage({super.key});
@@ -58,6 +59,15 @@ class _MacHomePageState extends State<MacHomePage> {
       accentColor: Color(0xFF81C784),
       routeName: RouteNames.aggregation,
     ),
+    _MacMenuItem(
+      section: MacHomeSection.browse,
+      label: '浏览',
+      description: '查看全部 Block，并按类型、标签和排序方式筛选。',
+      highlights: ['全部数据', '类型筛选', '分页加载'],
+      icon: Icons.explore_outlined,
+      accentColor: Color(0xFFFFB74D),
+      routeName: RouteNames.browse,
+    ),
   ];
 
   MacHomeSection _activeSection = MacHomeSection.overview;
@@ -66,7 +76,7 @@ class _MacHomePageState extends State<MacHomePage> {
   final GlobalKey<NavigatorState> _contentNavigatorKey =
       GlobalKey<NavigatorState>();
   bool _isMenuSwitching = false;
-  
+
   // BID input field state management
   final TextEditingController _bidInputController = TextEditingController();
   final FocusNode _bidInputFocusNode = FocusNode();
@@ -139,7 +149,7 @@ class _MacHomePageState extends State<MacHomePage> {
   Future<void> _handleBidInputSubmit() async {
     final input = _bidInputController.text.trim();
     if (!_validateBidInput(input)) return;
-    
+
     await _fetchAndNavigateToBlock(input);
   }
 
@@ -406,6 +416,8 @@ class _MacHomePageState extends State<MacHomePage> {
     
     return _embeddedPageCache.putIfAbsent(section, () {
       switch (section) {
+        case MacHomeSection.browse:
+          return const BrowsePage();
         case MacHomeSection.aggregation:
           return const AggregationPage();
         case MacHomeSection.collect:
