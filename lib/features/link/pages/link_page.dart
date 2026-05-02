@@ -55,6 +55,7 @@ class _LinkPageState extends State<LinkPage> {
   bool _isUploading = false;
   String? _linkSortOrder; // 链接页面的排序顺序
   String? _externalSortOrder; // 外链页面的排序顺序
+  BlockProvider? _blockProvider;
 
   static const Map<String, String> _modelOptions = {
     '34c00af3a2d32129327766285361b0c1': '普通块',
@@ -81,7 +82,8 @@ class _LinkPageState extends State<LinkPage> {
     // Listen to BlockProvider for Block updates
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        context.read<BlockProvider>().addListener(_onBlockProviderUpdate);
+        _blockProvider = context.read<BlockProvider>();
+        _blockProvider!.addListener(_onBlockProviderUpdate);
       }
     });
   }
@@ -89,7 +91,8 @@ class _LinkPageState extends State<LinkPage> {
   @override
   void dispose() {
     // Remove BlockProvider listener
-    context.read<BlockProvider>().removeListener(_onBlockProviderUpdate);
+    _blockProvider?.removeListener(_onBlockProviderUpdate);
+    _blockProvider = null;
     super.dispose();
   }
 
@@ -100,7 +103,8 @@ class _LinkPageState extends State<LinkPage> {
   void _onBlockProviderUpdate() {
     if (!mounted) return;
     
-    final blockProvider = context.read<BlockProvider>();
+    final blockProvider = _blockProvider;
+    if (blockProvider == null) return;
     bool hasUpdates = false;
     
     // Update _linkBlocks if any Block in the list was updated

@@ -36,6 +36,7 @@ class _BlockDetailPageState extends State<BlockDetailPage> {
   bool _isAddingTag = false;
   bool _isSyncingLinkTag = false;
   VoidCallback? _blockProviderListener;
+  BlockProvider? _blockProvider;
 
   @override
   void initState() {
@@ -46,7 +47,8 @@ class _BlockDetailPageState extends State<BlockDetailPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _blockProviderListener = _onBlockProviderUpdate;
-        context.read<BlockProvider>().addListener(_blockProviderListener!);
+        _blockProvider = context.read<BlockProvider>();
+        _blockProvider!.addListener(_blockProviderListener!);
       }
     });
   }
@@ -55,13 +57,10 @@ class _BlockDetailPageState extends State<BlockDetailPage> {
   void dispose() {
     // Remove BlockProvider listener
     if (_blockProviderListener != null) {
-      try {
-        context.read<BlockProvider>().removeListener(_blockProviderListener!);
-      } catch (e) {
-        // Error removing listener
-      }
+      _blockProvider?.removeListener(_blockProviderListener!);
       _blockProviderListener = null;
     }
+    _blockProvider = null;
     super.dispose();
   }
 
@@ -73,7 +72,8 @@ class _BlockDetailPageState extends State<BlockDetailPage> {
     if (bid == null || bid.isEmpty) return;
     
     try {
-      final blockProvider = context.read<BlockProvider>();
+      final blockProvider = _blockProvider;
+      if (blockProvider == null) return;
       final updatedBlock = blockProvider.getBlock(bid);
       
       if (updatedBlock != null) {

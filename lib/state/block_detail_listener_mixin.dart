@@ -26,6 +26,7 @@ import 'block_provider.dart';
 /// ```
 mixin BlockDetailListenerMixin<T extends StatefulWidget> on State<T> {
   VoidCallback? _blockProviderListener;
+  BlockProvider? _blockProvider;
 
   /// Override this to return the BID of the Block being displayed
   String? get blockBid;
@@ -43,7 +44,8 @@ mixin BlockDetailListenerMixin<T extends StatefulWidget> on State<T> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _blockProviderListener = _onBlockProviderUpdate;
-        context.read<BlockProvider>().addListener(_blockProviderListener!);
+        _blockProvider = context.read<BlockProvider>();
+        _blockProvider!.addListener(_blockProviderListener!);
       }
     });
   }
@@ -51,13 +53,10 @@ mixin BlockDetailListenerMixin<T extends StatefulWidget> on State<T> {
   /// Call this in dispose to stop listening
   void stopBlockProviderListener() {
     if (_blockProviderListener != null) {
-      try {
-        context.read<BlockProvider>().removeListener(_blockProviderListener!);
-      } catch (e) {
-        // Listener removal failed
-      }
+      _blockProvider?.removeListener(_blockProviderListener!);
       _blockProviderListener = null;
     }
+    _blockProvider = null;
   }
 
   void _onBlockProviderUpdate() {
@@ -71,7 +70,8 @@ mixin BlockDetailListenerMixin<T extends StatefulWidget> on State<T> {
     }
 
     try {
-      final blockProvider = context.read<BlockProvider>();
+      final blockProvider = _blockProvider;
+      if (blockProvider == null) return;
       final updatedBlock = blockProvider.getBlock(bid);
 
       if (updatedBlock != null) {

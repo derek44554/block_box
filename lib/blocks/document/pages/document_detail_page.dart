@@ -36,6 +36,7 @@ class _DocumentDetailPageState extends State<DocumentDetailPage>
   int _linkCount = 0;
   bool _isLinkLoading = false;
   VoidCallback? _blockProviderListener;
+  BlockProvider? _blockProvider;
 
   String get _effectiveBid {
     if (_blockData.containsKey('bid')) {
@@ -102,7 +103,8 @@ class _DocumentDetailPageState extends State<DocumentDetailPage>
         
         // Listen to BlockProvider for updates
         _blockProviderListener = _onBlockProviderUpdate;
-        context.read<BlockProvider>().addListener(_blockProviderListener!);
+        _blockProvider = context.read<BlockProvider>();
+        _blockProvider!.addListener(_blockProviderListener!);
       }
     });
   }
@@ -119,13 +121,10 @@ class _DocumentDetailPageState extends State<DocumentDetailPage>
     
     // Remove BlockProvider listener
     if (_blockProviderListener != null) {
-      try {
-        context.read<BlockProvider>().removeListener(_blockProviderListener!);
-      } catch (e) {
-        // Error removing listener
-      }
+      _blockProvider?.removeListener(_blockProviderListener!);
       _blockProviderListener = null;
     }
+    _blockProvider = null;
     
     super.dispose();
   }
@@ -138,7 +137,8 @@ class _DocumentDetailPageState extends State<DocumentDetailPage>
     if (bid.isEmpty) return;
     
     try {
-      final blockProvider = context.read<BlockProvider>();
+      final blockProvider = _blockProvider;
+      if (blockProvider == null) return;
       final updatedBlock = blockProvider.getBlock(bid);
       
       if (updatedBlock != null) {

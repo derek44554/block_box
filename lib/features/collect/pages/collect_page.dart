@@ -50,6 +50,8 @@ class _CollectPageState extends State<CollectPage> {
   bool _isDragging = false;
   bool _isUploading = false;
   String? _sortOrder; // 排序顺序: "desc", "asc", 或 null
+  CollectProvider? _collectProvider;
+  BlockProvider? _blockProvider;
 
   static const Map<String, String> _modelOptions = {
     '34c00af3a2d32129327766285361b0c1': '普通块',
@@ -65,7 +67,9 @@ class _CollectPageState extends State<CollectPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final provider = context.read<CollectProvider>();
+      _collectProvider = provider;
       if (provider.entries.isNotEmpty && !_selectionRestored) {
         _restoreSelection(provider);
       } else if (!_selectionRestored) {
@@ -82,29 +86,24 @@ class _CollectPageState extends State<CollectPage> {
       
       // Listen to BlockProvider for Block updates
       _blockProviderListener = _onBlockProviderUpdate;
-      context.read<BlockProvider>().addListener(_blockProviderListener!);
+      _blockProvider = context.read<BlockProvider>();
+      _blockProvider!.addListener(_blockProviderListener!);
     });
   }
 
   @override
   void dispose() {
     if (_providerListener != null) {
-      try {
-        context.read<CollectProvider>().removeListener(_providerListener!);
-      } catch (e) {
-        // Ignore errors during cleanup
-      }
+      _collectProvider?.removeListener(_providerListener!);
       _providerListener = null;
     }
     // Remove BlockProvider listener
     if (_blockProviderListener != null) {
-      try {
-        context.read<BlockProvider>().removeListener(_blockProviderListener!);
-      } catch (e) {
-        // Ignore errors during cleanup
-      }
+      _blockProvider?.removeListener(_blockProviderListener!);
       _blockProviderListener = null;
     }
+    _collectProvider = null;
+    _blockProvider = null;
     super.dispose();
   }
 
@@ -113,7 +112,8 @@ class _CollectPageState extends State<CollectPage> {
     if (!mounted) return;
     
     try {
-      final blockProvider = context.read<BlockProvider>();
+      final blockProvider = _blockProvider;
+      if (blockProvider == null) return;
       bool hasUpdates = false;
       
       // Update _activeBlocks if any Block in the list was updated
@@ -185,6 +185,7 @@ class _CollectPageState extends State<CollectPage> {
     });
     // 先加载设置（包括排序），等待完成后再加载数据
     await _loadCollectionSettings(resolvedItem.bid);
+    if (!mounted) return;
     _fetchLinkBlocks(context: context, bid: resolvedItem.bid, page: 1);
   }
 
@@ -222,6 +223,7 @@ class _CollectPageState extends State<CollectPage> {
     if (_selectedCollection != null) {
       // 先加载设置（包括排序），等待完成后再加载数据
       _loadCollectionSettings(item.bid).then((_) {
+        if (!mounted) return;
         _fetchLinkBlocks(context: context, bid: item.bid, page: 1);
       });
       _loadAvailableLinkTags(item.bid);
@@ -554,6 +556,7 @@ class _CollectPageState extends State<CollectPage> {
     }
 
     final targetBid = await showAddLinkDialog(context);
+    if (!mounted) return;
     if (targetBid == null || targetBid.trim().isEmpty) {
       return;
     }
@@ -570,6 +573,7 @@ class _CollectPageState extends State<CollectPage> {
 
       // 获取目标块的信息
       final targetBlockResponse = await api.getBlock(bid: targetBid);
+      if (!mounted) return;
       final targetData = targetBlockResponse['data'];
       if (targetData == null || targetData is! Map<String, dynamic>) {
         throw Exception('未找到指定 BID 对应的块');

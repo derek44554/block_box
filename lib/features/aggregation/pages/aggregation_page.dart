@@ -33,12 +33,15 @@ class _AggregationPageState extends State<AggregationPage> {
   bool _hasMoreBlocks = true;
   bool _selectionRestored = false;
   VoidCallback? _providerListener;
+  AggregationProvider? _aggregationProvider;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final provider = context.read<AggregationProvider>();
+      _aggregationProvider = provider;
       if (provider.items.isNotEmpty && !_selectionRestored) {
         _restoreSelection(provider);
       } else if (!_selectionRestored) {
@@ -59,9 +62,10 @@ class _AggregationPageState extends State<AggregationPage> {
   @override
   void dispose() {
     if (_providerListener != null) {
-      context.read<AggregationProvider>().removeListener(_providerListener!);
+      _aggregationProvider?.removeListener(_providerListener!);
       _providerListener = null;
     }
+    _aggregationProvider = null;
     super.dispose();
   }
 
@@ -1288,4 +1292,3 @@ class _ModelSelectorDialogState extends State<_ModelSelectorDialog> {
     );
   }
 }
-
