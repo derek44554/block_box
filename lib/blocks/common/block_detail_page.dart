@@ -1,21 +1,26 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:block_app/core/network/api/block_api.dart';
+import 'package:block_app/core/widgets/dialogs/app_dialog.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../../core/utils/formatters/bid_formatter.dart';
-import '../../core/models/block_model.dart';
-import 'package:block_app/core/network/api/block_api.dart';
-import '../../features/link/pages/link_page.dart';
-import '../../state/connection_provider.dart';
-import '../../state/block_provider.dart';
+
+import '../../components/block/raw_data_page.dart';
 import '../../components/block/widgets/block_header.dart';
 import '../../components/block/widgets/block_meta_column.dart';
 import '../../components/block/widgets/block_meta_tile.dart';
 import '../../components/block/widgets/block_permission_card.dart';
 import '../../components/block/widgets/block_quick_actions.dart';
 import '../../components/block/widgets/block_section_header.dart';
-import '../../components/block/raw_data_page.dart';
-import 'package:block_app/core/widgets/dialogs/app_dialog.dart';
+import '../../core/models/block_model.dart';
 import '../../core/routing/app_router.dart';
+import '../../core/utils/formatters/bid_formatter.dart';
+import '../../features/link/pages/link_page.dart';
+import '../../state/block_provider.dart';
+import '../../state/connection_provider.dart';
 
 class BlockDetailPage extends StatefulWidget {
   const BlockDetailPage({super.key, required this.block});
@@ -165,6 +170,10 @@ class _BlockDetailPageState extends State<BlockDetailPage> {
                         label: 'Link',
                       ),
                       BlockQuickAction(
+                        icon: Icons.download_outlined,
+                        label: '下载',
+                      ),
+                      BlockQuickAction(
                         icon: Icons.edit_note_outlined,
                         label: '修改',
                       ),
@@ -280,6 +289,11 @@ class _BlockDetailPageState extends State<BlockDetailPage> {
       return;
     }
 
+    if (label == '下载') {
+      await _handleDownloadBlockYaml(context);
+      return;
+    }
+
     if (label == '修改') {
       final result = await AppRouter.openBlockEditPage(context, _blockModel);
       if (result != null && mounted) {
@@ -310,6 +324,143 @@ class _BlockDetailPageState extends State<BlockDetailPage> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text('$label 功能暂未实现')));
+  }
+
+  Future<void> _handleDownloadBlockYaml(BuildContext context) async {
+    try {
+      final fileName = _generateBlockYamlFileName();
+      final outputFile = await FilePicker.platform.saveFile(
+        dialogTitle: '保存块数据',
+        fileName: fileName,
+        type: FileType.custom,
+        allowedExtensions: ['yml'],
+      );
+
+      if (outputFile == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('取消下载')));
+        return;
+      }
+
+      final lowerOutputFile = outputFile.toLowerCase();
+      final hasYamlExtension =
+          lowerOutputFile.endsWith('.yml') ||
+          lowerOutputFile.endsWith('.yaml');
+      final targetPath = hasYamlExtension ? outputFile : '$outputFile.yml';
+      final file = File(targetPath);
+      final yamlContent = _encodeYaml(_normalizeYamlValue(_blockData));
+      await file.writeAsString(yamlContent, encoding: utf8);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('块数据已保存到:\n$targetPath')));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('下载失败：$error')));
+    }
+  }
+
+  String _generateBlockYamlFileName() {
+    final name =
+        _blockModel.maybeString('name') ??
+        _blockModel.maybeString('bid') ??
+        'block';
+    final cleanName = name
+        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
+        .replaceAll(RegExp(r'\s+'), '_')
+        .trim();
+    final safeName = cleanName.isEmpty ? 'block' : cleanName;
+    return '$safeName.yml';
+  }
+
+  dynamic _normalizeYamlValue(dynamic value) {
+    if (value == null || value is num || value is bool || value is String) {
+      return value;
+    }
+    if (value is DateTime) {
+      return value.toIso8601String();
+    }
+    if (value is Map) {
+      return value.map(
+        (key, mapValue) =>
+            MapEntry(key.toString(), _normalizeYamlValue(mapValue)),
+      );
+    }
+    if (value is Iterable) {
+      return value.map(_normalizeYamlValue).toList();
+    }
+    return value.toString();
+  }
+
+  String _encodeYaml(dynamic value, [int indent = 0]) {
+    final buffer = StringBuffer();
+    _writeYamlValue(buffer, value, indent);
+    return buffer.toString();
+  }
+
+  void _writeYamlValue(StringBuffer buffer, dynamic value, int indent) {
+    final padding = ' ' * indent;
+
+    if (value is Map) {
+      if (value.isEmpty) {
+        buffer.writeln('${padding}{}');
+        return;
+      }
+      for (final entry in value.entries) {
+        final entryValue = entry.value;
+        final key = _encodeYamlKey(entry.key.toString());
+        if (_isYamlScalar(entryValue)) {
+          buffer.writeln('$padding$key: ${_encodeYamlScalar(entryValue)}');
+        } else {
+          buffer.writeln('$padding$key:');
+          _writeYamlValue(buffer, entryValue, indent + 2);
+        }
+      }
+      return;
+    }
+
+    if (value is List) {
+      if (value.isEmpty) {
+        buffer.writeln('${padding}[]');
+        return;
+      }
+      for (final item in value) {
+        if (_isYamlScalar(item)) {
+          buffer.writeln('$padding- ${_encodeYamlScalar(item)}');
+        } else {
+          buffer.writeln('$padding-');
+          _writeYamlValue(buffer, item, indent + 2);
+        }
+      }
+      return;
+    }
+
+    buffer.writeln('$padding${_encodeYamlScalar(value)}');
+  }
+
+  bool _isYamlScalar(dynamic value) {
+    return value == null || value is num || value is bool || value is String;
+  }
+
+  String _encodeYamlKey(String key) {
+    return RegExp(r'^[A-Za-z_][A-Za-z0-9_-]*$').hasMatch(key)
+        ? key
+        : jsonEncode(key);
+  }
+
+  String _encodeYamlScalar(dynamic value) {
+    if (value == null) {
+      return 'null';
+    }
+    if (value is num || value is bool) {
+      return value.toString();
+    }
+    return jsonEncode(value.toString());
   }
 
   Future<void> _handleDeleteBlock(BuildContext context) async {
