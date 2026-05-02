@@ -528,7 +528,7 @@ class _BlockDetailPageState extends State<BlockDetailPage> {
               child: OutlinedButton(
                 onPressed: () => Navigator.of(dialogContext).pop(false),
                 style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: Colors.white.withOpacity(0.12)),
+                  side: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
                   foregroundColor: Colors.white70,
                 ),
                 child: const Text('取消'),
@@ -598,7 +598,7 @@ class _BlockDetailPageState extends State<BlockDetailPage> {
                 child: OutlinedButton(
                   onPressed: () => Navigator.of(dialogContext).pop(),
                   style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.white.withOpacity(0.12)),
+                    side: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
                     foregroundColor: Colors.white70,
                   ),
                   child: const Text('取消'),
@@ -992,14 +992,12 @@ class _DashedRectBorder extends ShapeBorder {
   const _DashedRectBorder({
     required this.color,
     required this.borderRadius,
-    this.dashWidth = 4,
-    this.gapWidth = 3,
   });
 
   final Color color;
   final BorderRadius borderRadius;
-  final double dashWidth;
-  final double gapWidth;
+  static const double _dashWidth = 4;
+  static const double _gapWidth = 3;
 
   @override
   EdgeInsetsGeometry get dimensions => EdgeInsets.zero;
@@ -1033,13 +1031,13 @@ class _DashedRectBorder extends ShapeBorder {
     for (final metric in metrics) {
       double distance = 0;
       while (distance < metric.length) {
-        final next = distance + dashWidth;
+        final next = distance + _dashWidth;
         final extractPath = metric.extractPath(
           distance,
           next.clamp(0.0, metric.length),
         );
         canvas.drawPath(extractPath, paint);
-        distance = next + gapWidth;
+        distance = next + _gapWidth;
       }
     }
   }
