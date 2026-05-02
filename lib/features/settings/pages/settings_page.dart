@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'api_keys_page.dart';
 import 'about_page.dart';
+import 'block_import_page.dart';
 import '../../collect/pages/collect_backup_page.dart';
 
-
 /// 设置页面
-/// 
+///
 /// 提供各种应用设置选项的入口
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -59,6 +59,19 @@ class SettingsPage extends StatelessWidget {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const CollectBackupPage(),
+                  ),
+                );
+              },
+            ),
+            _buildSettingItem(
+              context,
+              icon: Icons.inventory_2_outlined,
+              title: 'Block 导入',
+              subtitle: '批量导入 .yml Block 文件',
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const BlockImportPage(),
                   ),
                 );
               },
