@@ -366,16 +366,13 @@ class _BlockDetailPageState extends State<BlockDetailPage> {
   }
 
   String _generateBlockYamlFileName() {
-    final name =
-        _blockModel.maybeString('name') ??
-        _blockModel.maybeString('bid') ??
-        'block';
-    final cleanName = name
+    final bid = _blockModel.maybeString('bid') ?? 'block';
+    final cleanBid = bid
         .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
         .replaceAll(RegExp(r'\s+'), '_')
         .trim();
-    final safeName = cleanName.isEmpty ? 'block' : cleanName;
-    return '$safeName.yml';
+    final safeBid = cleanBid.isEmpty ? 'block' : cleanBid;
+    return '$safeBid.yml';
   }
 
   dynamic _normalizeYamlValue(dynamic value) {
