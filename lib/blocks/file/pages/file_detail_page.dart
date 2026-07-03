@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -11,11 +13,11 @@ import '../../common/block_detail_page.dart';
 import '../../../state/connection_provider.dart';
 import '../../../utils/block_image_loader.dart';
 import '../../../utils/file_category.dart';
+import '../../../utils/ipfs_file_helper.dart';
 import '../models/file_card_data.dart';
 import '../models/audio_item.dart';
 import '../services/audio_player_service.dart';
 import '../../../state/block_detail_listener_mixin.dart';
-
 
 class FileDetailPage extends StatefulWidget {
   const FileDetailPage({super.key, required this.block});
@@ -26,12 +28,14 @@ class FileDetailPage extends StatefulWidget {
   State<FileDetailPage> createState() => _FileDetailPageState();
 }
 
-class _FileDetailPageState extends State<FileDetailPage> with BlockDetailListenerMixin {
+class _FileDetailPageState extends State<FileDetailPage>
+    with BlockDetailListenerMixin {
   late FileCardData _data;
   Uint8List? _imageBytes;
   bool _isLoadingImage = false;
   String? _imageError;
-  
+  bool _isDownloading = false;
+
   // 音频播放相关
   AudioPlayerService? _audioPlayer;
   bool _isAudioFile = false;
@@ -121,6 +125,7 @@ class _FileDetailPageState extends State<FileDetailPage> with BlockDetailListene
                     _buildFileInfo(createdAt),
                     if (fileName.isNotEmpty) _buildTitle(fileName),
                     if (intro != null && intro.isNotEmpty) _buildIntro(intro),
+                    _buildDownloadSection(),
                     if (bid.isNotEmpty) _buildBid(bid),
                     const SizedBox(height: 100),
                   ]),
@@ -352,6 +357,122 @@ class _FileDetailPageState extends State<FileDetailPage> with BlockDetailListene
         ],
       ),
     );
+  }
+
+  Widget _buildDownloadSection() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      width: double.infinity,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: TextButton.icon(
+          onPressed: _isDownloading ? null : _handleDownload,
+          icon: _isDownloading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white54,
+                  ),
+                )
+              : const Icon(
+                  Icons.download_outlined,
+                  size: 16,
+                  color: Colors.white54,
+                ),
+          label: Text(
+            _isDownloading ? '下载中...' : '下载到本地',
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 13,
+              letterSpacing: 0.5,
+            ),
+          ),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleDownload() async {
+    setState(() => _isDownloading = true);
+
+    try {
+      final outputFile = await FilePicker.platform.saveFile(
+        dialogTitle: '选择保存位置',
+        fileName: _downloadFileName(),
+        type: _extension.isEmpty ? FileType.any : FileType.custom,
+        allowedExtensions: _extension.isEmpty ? null : [_extension],
+      );
+
+      if (outputFile == null) {
+        _showMessage('取消下载');
+        return;
+      }
+
+      final bytes = await _loadDownloadBytes();
+      if (bytes.isEmpty) {
+        _showMessage('没有可下载的内容');
+        return;
+      }
+
+      await File(outputFile).writeAsBytes(bytes);
+      _showMessage('文件已保存');
+    } catch (error) {
+      _showMessage('下载失败: $error');
+    } finally {
+      if (mounted) {
+        setState(() => _isDownloading = false);
+      }
+    }
+  }
+
+  Future<Uint8List> _loadDownloadBytes() async {
+    final category = resolveFileCategory(_extension);
+    if (category.isImage) {
+      if (_imageBytes == null) {
+        await _ensureImageLoaded();
+      }
+      if (_imageBytes != null) {
+        return _imageBytes!;
+      }
+    }
+
+    final endpoint = context.read<ConnectionProvider>().ipfsEndpoint;
+    if (endpoint == null || endpoint.isEmpty) {
+      throw Exception('缺少 IPFS 地址，无法下载文件');
+    }
+
+    return IpfsFileHelper.downloadFromNetwork(
+      endpoint: endpoint,
+      data: _data,
+    );
+  }
+
+  String _downloadFileName() {
+    final fileName =
+        _data.fileName.trim().isEmpty ? '文件' : _data.fileName.trim();
+    final extension = _extension;
+    final hasExtension =
+        extension.isNotEmpty && fileName.toLowerCase().endsWith('.$extension');
+    final name =
+        hasExtension ? fileName : '$fileName${extension.isEmpty ? '' : '.$extension'}';
+    return name
+        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
+        .replaceAll(RegExp(r'\s+'), '_')
+        .trim();
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   String get _extension => _data.extension;

@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -35,12 +37,14 @@ class ImageDetailPage extends StatefulWidget {
   State<ImageDetailPage> createState() => _ImageDetailPageState();
 }
 
-class _ImageDetailPageState extends State<ImageDetailPage> with BlockDetailListenerMixin {
+class _ImageDetailPageState extends State<ImageDetailPage>
+    with BlockDetailListenerMixin {
   late FileCardData _data;
   BlockImageResult? _imageResult;
   bool _isLoading = false;
   String? _error;
   bool _loadingOriginal = false;
+  bool _isDownloading = false;
 
   @override
   String? get blockBid => widget.block.bid;
@@ -163,6 +167,7 @@ class _ImageDetailPageState extends State<ImageDetailPage> with BlockDetailListe
                     if (_data.gps != null) _buildGpsInfo(_data.gps!),
                     if (fileName.isNotEmpty) _buildTitle(fileName),
                     if (intro != null && intro.isNotEmpty) _buildIntro(intro),
+                    _buildDownloadSection(),
                     if (bid.isNotEmpty) _buildBid(bid),
                     const SizedBox(height: 100),
                   ]),
@@ -426,6 +431,111 @@ class _ImageDetailPageState extends State<ImageDetailPage> with BlockDetailListe
         ],
       ),
     );
+  }
+
+  Widget _buildDownloadSection() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      width: double.infinity,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: TextButton.icon(
+          onPressed: _isDownloading ? null : _handleDownload,
+          icon: _isDownloading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white54,
+                  ),
+                )
+              : const Icon(
+                  Icons.download_outlined,
+                  size: 16,
+                  color: Colors.white54,
+                ),
+          label: Text(
+            _isDownloading ? '下载中...' : '下载到本地',
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 13,
+              letterSpacing: 0.5,
+            ),
+          ),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleDownload() async {
+    setState(() => _isDownloading = true);
+
+    try {
+      var result = _imageResult;
+      if (result == null || result.variant != ImageVariant.original) {
+        await _loadImage();
+        result = _imageResult;
+      }
+
+      if (result == null || result.bytes.isEmpty) {
+        _showMessage('没有可下载的图片');
+        return;
+      }
+
+      final outputFile = await FilePicker.platform.saveFile(
+        dialogTitle: '选择保存位置',
+        fileName: _downloadFileName(),
+        type: FileType.custom,
+        allowedExtensions: _allowedExtensions(),
+      );
+
+      if (outputFile == null) {
+        _showMessage('取消下载');
+        return;
+      }
+
+      await File(outputFile).writeAsBytes(result.bytes);
+      _showMessage('文件已保存');
+    } catch (error) {
+      _showMessage('下载失败: $error');
+    } finally {
+      if (mounted) {
+        setState(() => _isDownloading = false);
+      }
+    }
+  }
+
+  String _downloadFileName() {
+    final fileName =
+        _data.fileName.trim().isEmpty ? '图片' : _data.fileName.trim();
+    final extension = _data.extension;
+    final hasExtension =
+        extension.isNotEmpty && fileName.toLowerCase().endsWith('.$extension');
+    final name =
+        hasExtension ? fileName : '$fileName${extension.isEmpty ? '' : '.$extension'}';
+    return name
+        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
+        .replaceAll(RegExp(r'\s+'), '_')
+        .trim();
+  }
+
+  List<String>? _allowedExtensions() {
+    final extension = _data.extension;
+    if (extension.isEmpty) {
+      return null;
+    }
+    return [extension];
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   BlockImageResult? _createInitialResult(
